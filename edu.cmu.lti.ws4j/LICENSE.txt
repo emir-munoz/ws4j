@@ -1,0 +1,1 @@
+See GPL.txt and FDL.txt inherited from WordNet-Similarity-2.05.
