@@ -16,7 +16,7 @@ Princeton WordNet 3.0 compatible synsets).
 ---- Preparation ----
 By default, requirement for compilation are:
  - JDK 5+ 
- - Maven 2 (or m2eclipse plugin on eclipse)
+ - Maven 2 (or "m2e" plugin on eclipse, avoid "m2eclipse")
  - JAWJAW (Java Wrapper for NICT Japanese/English WordNet; http://code.google.com/p/jawjaw).
 
 Before using WS4J, compile and package JAWJAW and put the
@@ -40,7 +40,7 @@ Test cases:
 Maven command:
   mvn test
 
-Launch file for Eclipse + m2eclipse:
+Launch file for Eclipse + m2e:
   launches/WS4J_Run_All_JUnitTests.launch
 
 The expected results from the test cases are compatible with the 
@@ -54,8 +54,8 @@ Here's a way to create a jar file including resource and config files.
 Maven command:
   mvn install
 
-Launch file for Eclipse + m2eclipse:
-  launches/WS4J_install_without_dependency.launch
+Launch file for Eclipse + m2e:
+  launches/WS4J_package_m2e.launch
 
 Output jar file (may need a refresh on the directory):
   target/ws4j.jar
