@@ -16,9 +16,11 @@ Princeton WordNet 3.0 compatible synsets).
 ---- Preparation ----
 By default, requirement for compilation are:
  - JDK 5+ 
- - Maven 2 (or "m2e" plugin on eclipse, avoid "m2eclipse")
+ - Maven 2 (or "m2e" plugin on eclipse)
  - JAWJAW (Java Wrapper for NICT Japanese/English WordNet; http://code.google.com/p/jawjaw).
 
+It's NORMAL that you see a build error in eclipse as JAWJAW is 
+not contained in lib/ for the source code distribution.
 Before using WS4J, compile and package JAWJAW and put the
 jar file under the lib directory in this project: ./lib/jawjaw.jar
 Until you do this, WS4J does not compile.

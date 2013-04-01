@@ -4,7 +4,7 @@
   <groupId>edu.cmu.lti</groupId>
   <artifactId>ws4j</artifactId>
   <packaging>jar</packaging>
-  <version>1.0.0</version>
+  <version>1.0.1</version>
   <name>WS4J</name>
   <url>http://code.google.com/p/ws4j/</url>
 
@@ -28,7 +28,7 @@
     <dependency>
       <groupId>edu.cmu.lti</groupId>
       <artifactId>jawjaw</artifactId>
-      <version>1.0.0</version>
+      <version>1.0.2</version>
       <scope>system</scope> 
       <systemPath>${basedir}/lib/jawjaw.jar</systemPath>
     </dependency>
