@@ -1,0 +1,56 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>edu.cmu.lti</groupId>
+  <artifactId>abstract_wordnet</artifactId>
+  <packaging>jar</packaging>
+  <version>1.0.0</version>
+  <name>Abstract WordNet API</name>
+  <url>http://code.google.com/p/ws4j/</url>
+
+  <organization>
+    <name>CMU SCS LTI</name>
+    <url>http://www.lti.cs.cmu.edu</url>
+  </organization>
+  
+  <dependencies>
+  </dependencies>
+
+  <build>
+    <finalName>abstract_wordnet</finalName>
+    <sourceDirectory>src/main/java</sourceDirectory>
+    <testSourceDirectory>src/test/java</testSourceDirectory>
+
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <configuration>
+            <source>1.5</source>
+            <target>1.5</target>
+            <encoding>UTF-8</encoding>
+          </configuration>
+        </plugin>
+        <plugin>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>2.3</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>2.2</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <resources>
+      <resource>
+        <directory>${basedir}/src/main/config</directory>
+      </resource>
+      <resource>
+        <directory>${basedir}/src/main/resources</directory>
+      </resource>
+    </resources>
+  </build>
+
+</project>
