@@ -25,9 +25,12 @@ public class Benchmarker {
     ByteArrayOutputStream out = new ByteArrayOutputStream();
     PrintWriter pw = new PrintWriter(out);
     long t2 = System.currentTimeMillis();
+//    ds.runOnSentences(pw, 
+//            DemoServlet.sample1, 
+//            DemoServlet.sample2);
     ds.runOnSentences(pw, 
-            DemoServlet.sample1, 
-            DemoServlet.sample2);
+            "Any trip to Italy should include a visit to Tuscany to sample their exquisite wines.", 
+            "Be sure to include a Tuscan wine-tasting experience when visiting Italy.  ");
     pw.flush();
     long t3 = System.currentTimeMillis();
     System.out.println("Calculation done in "+(t3-t2)+" msec.");

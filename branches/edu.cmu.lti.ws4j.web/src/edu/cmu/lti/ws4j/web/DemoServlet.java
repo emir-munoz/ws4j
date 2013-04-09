@@ -17,6 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import edu.cmu.lti.abstract_wordnet.AbstractWordNet;
 import edu.cmu.lti.abstract_wordnet.POS;
+import edu.cmu.lti.ram_wordnet.OnMemoryWordNetAPI;
 import edu.cmu.lti.ws4j.Relatedness;
 import edu.cmu.lti.ws4j.RelatednessCalculator;
 import edu.cmu.lti.ws4j.RelatednessCalculator.Parameters;
@@ -27,7 +28,6 @@ import edu.cmu.lti.ws4j.impl.Lesk;
 import edu.cmu.lti.ws4j.impl.Lin;
 import edu.cmu.lti.ws4j.impl.Resnik;
 import edu.cmu.lti.ws4j.impl.WuPalmer;
-import edu.cmu.lti.ws4j.ramwn.OnMemoryWordNetAPI;
 import edu.washington.cs.knowitall.morpha.MorphaStemmer;
 
 @SuppressWarnings("serial")
@@ -89,7 +89,7 @@ public class DemoServlet extends HttpServlet {
         sbResult.append(m+" demo is coming soon.");
       } else {
         Relatedness r = rc.calcRelatednessOfWords(w1, w2, true);
-        String log = r.getTrace().replaceAll("\n", "<br>\n");
+        String log = r.getTrace().replaceAll("<","&lt;").replaceAll("\n", "<br>\n");
         StringBuffer sb = new StringBuffer();
         Pattern patter = Pattern.compile("((^|\\n)[a-z]{3}\\(.+?\\) = [0-9.Ee-]+)");
         Matcher matcher = patter.matcher(log);
@@ -115,11 +115,11 @@ public class DemoServlet extends HttpServlet {
   
   public void runOnSentences( PrintWriter out, String s1, String s2 ) {
     StringBuilder sbForm = new StringBuilder();
-    sbForm.append("<form action=\"/\" method=\"get\">\n");
-    sbForm.append("Type in sentences to process, or use example sentences by clicking on:\n");
+    sbForm.append("<form action=\"/\" method=\"get\" onsubmit=\"return validate()\">\n");
+    sbForm.append("Type in a pair of words or sentences to compare similarity, or use example sentences by clicking on:\n");
     sbForm.append("&nbsp;<input type=\"button\" value=\"  insert sample sentences  \" onclick=\"insert_sample()\"><br><br>\n");
-    sbForm.append("&nbsp;<textarea rows=\"4\" cols=\"40\" id=\"s1\" name=\"s1\">"+(s1==null?"":s1)+"</textarea><br>\n");
-    sbForm.append("&nbsp;<textarea rows=\"4\" cols=\"40\" id=\"s2\" name=\"s2\">"+(s2==null?"":s2)+"</textarea><br>\n");
+    sbForm.append("&nbsp;<textarea rows=\"4\" cols=\"40\" id=\"s1\" name=\"s1\" placeholder=\"the first sentence goes here\">"+(s1==null?"":s1)+"</textarea><br>\n");
+    sbForm.append("&nbsp;<textarea rows=\"4\" cols=\"40\" id=\"s2\" name=\"s2\" placeholder=\"the second sentence goes here\">"+(s2==null?"":s2)+"</textarea><br>\n");
     sbForm.append("&nbsp;<input type=\"submit\" value=\"  Calculate  \"><br>\n");
     sbForm.append("</form>\n");
     if (s1==null || s2==null) {
@@ -182,7 +182,7 @@ public class DemoServlet extends HttpServlet {
               }
             } else {
               if ( Double.MAX_VALUE - d < 10e-9 ) {//MAX
-                dText = "<span title=\""+popup+" = INF\"><i><a href=\""+url+"\" target=\"_blank\">MAX</a></i></span>";
+                dText = "<span title=\""+popup+" = INF\"><i><a href=\""+url+"\" target=\"_blank\">INF</a></i></span>";
               } else {
                 dText = "<span title=\""+popup+" = "+d+"\"><a href=\""+url+"\" target=\"_blank\">"+nf.format(d)+"</a></span>";
               }
@@ -202,6 +202,7 @@ public class DemoServlet extends HttpServlet {
         sbResult.append("</textarea>");
       }
       out.println( sbResult );
+      out.flush();
     }
     long t01 = System.currentTimeMillis();
     
@@ -268,6 +269,12 @@ public class DemoServlet extends HttpServlet {
     sb.append("  document.getElementById('s1').value = \""+sample1+"\";\n");
     sb.append("  document.getElementById('s2').value = \""+sample2+"\";\n");
     sb.append("}\n");
+    sb.append("function validate() {\n");
+    sb.append("  var s1 = document.getElementById('s1').value;\n");
+    sb.append("  var s2 = document.getElementById('s2').value;\n");
+    sb.append("  if (s1.trim().length==0||s2.trim().length==0) {alert(\"Please fill in both of the text boxes.\"); return false;}\n");
+    sb.append("  return s1.length * s2.length <= 10000 || confirm(\"Input texts are long so it may take some time. Is it ok?\");\n");
+    sb.append("}\n");    
     sb.append("</script>\n");
     sb.append("</head>\n");
     sb.append("<body>\n");
