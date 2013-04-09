@@ -51,7 +51,8 @@ public class DemoServlet extends HttpServlet {
           throws IOException {
     res.setContentType("text/html");
     res.getWriter().println( getHeader() );
-    res.getWriter().println( "<h1>WS4J (WordNet Similarity for Java) Demo</h1>\n" );
+    res.getWriter().println( "<h1>WS4J Demo</h1>\n" +
+    		"WS4J (WordNet Similarity for Java) measures semantic similarity/relatedness between words.<br><br>\n" );
 
     String w1 = req.getParameter("w1");
     String w2 = req.getParameter("w2");
@@ -90,7 +91,7 @@ public class DemoServlet extends HttpServlet {
         Relatedness r = rc.calcRelatednessOfWords(w1, w2, true);
         String log = r.getTrace().replaceAll("\n", "<br>\n");
         StringBuffer sb = new StringBuffer();
-        Pattern patter = Pattern.compile("([a-z]{3}\\(.+?\\) = [0-9.Ee-]+)");
+        Pattern patter = Pattern.compile("((^|\\n)[a-z]{3}\\(.+?\\) = [0-9.Ee-]+)");
         Matcher matcher = patter.matcher(log);
         while ( matcher.find() ) {
           matcher.appendReplacement(sb, "<h3>"+matcher.group(1)+"</h3>");
@@ -114,14 +115,17 @@ public class DemoServlet extends HttpServlet {
   
   public void runOnSentences( PrintWriter out, String s1, String s2 ) {
     StringBuilder sbForm = new StringBuilder();
-    sbForm.append("<form action=\"ws4j\" method=\"get\">\n");
+    sbForm.append("<form action=\"/\" method=\"get\">\n");
     sbForm.append("Type in sentences to process, or use example sentences by clicking on:\n");
     sbForm.append("&nbsp;<input type=\"button\" value=\"  insert sample sentences  \" onclick=\"insert_sample()\"><br><br>\n");
     sbForm.append("&nbsp;<textarea rows=\"4\" cols=\"40\" id=\"s1\" name=\"s1\">"+(s1==null?"":s1)+"</textarea><br>\n");
     sbForm.append("&nbsp;<textarea rows=\"4\" cols=\"40\" id=\"s2\" name=\"s2\">"+(s2==null?"":s2)+"</textarea><br>\n");
     sbForm.append("&nbsp;<input type=\"submit\" value=\"  Calculate  \"><br>\n");
     sbForm.append("</form>\n");
-    if (s1==null || s2==null) return;
+    if (s1==null || s2==null) {
+      out.println( sbForm );
+      return;
+    }
     
     sbForm.append("[Tips] In this demo, the following preprocessing are done before WS4J: tokenization, POS tagging, lemmatization.<br>\n" +
         "If you see unexpected results due to errors in preprocessing, simply type in a list of lemmatized words.<br>\n");
@@ -243,6 +247,7 @@ public class DemoServlet extends HttpServlet {
     StringBuilder sb = new StringBuilder();
     sb.append("<html>\n");
     sb.append("<head>\n");
+    sb.append("<title>WS4J Demo</title>\n");
     sb.append("<!--<link rel=\"alternate\" type=\"application/rss+xml\" title=\"RSS\" href=\"\" />-->\n");
     sb.append("<meta charset=\"utf-8\" />\n");
     sb.append("<style>\n");
@@ -250,12 +255,12 @@ public class DemoServlet extends HttpServlet {
     sb.append("  font-size: 11px;\n");
     sb.append("  font-family: 'ヒラギノ角ゴ Pro W3','Hiragino Kaku Gothic Pro','メイリオ',Meiryo,'ＭＳ Ｐゴシック',sans-serif;\n");
     sb.append("}\n");
-    sb.append("h1 { font-weight: bold;font-size: 24px; margin-bottom: 20px; }\n");
-    sb.append("h2 { font-weight: bold;font-size: 20px; border-bottom: 1px solid #000000; margin-top: 30px; }\n");
+    sb.append("h1 { font-weight: bold; font-size: 24px; margin-bottom: 0px; }\n");
+    sb.append("h2 { font-weight: bold; font-size: 20px; border-bottom: 1px solid #000000; margin-top: 30px; }\n");
     sb.append("h3 { font-size: 14px; }\n");
-    sb.append("table { border-spacing:0;border-collapse:collapse; }\n");
-    sb.append("td { margin:0px; padding-left:10px; padding-right:2px; text-align:right; font-size:11px; }\n");
-    sb.append("td.th { font-weight: bold; text-align:left; padding-left:2px; background-color:rgb(255, 255, 173) }\n");
+    sb.append("table { border:1px solid #666; border-collapse: collapse; border-spacing: 0px; }\n");
+    sb.append("td { margin:0px; text-align:right; font-size:11px; border:1px solid #666; border-collapse: collapse; border-spacing: 0px; }\n");
+    sb.append("td.th { padding-left:5px; padding-right:5px; font-size:10px; font-weight: bold; text-align:left; padding-left:2px; background-color:rgb(255, 255, 173) }\n");
     sb.append(".g { color:#666666; }\n");
     sb.append("</style>\n");
     sb.append("<script>\n");

@@ -154,7 +154,7 @@ public class OnMemoryWordNet {
       String[] kv = line.split(SEP1);
       if (kv.length!=2) continue; 
       String[] keys = kv[0].split(SEP2);
-      String word = keys[0];
+      String word = keys[0].toLowerCase();
       String pos = keys[1];
       Integer wordIndex = dictW.get(word);
       if (wordIndex==null) System.err.println("word not in index!!");
@@ -203,6 +203,7 @@ public class OnMemoryWordNet {
       String[] items1 = items[0].split(SEP2);
       Integer key1 = dictS.get(items1[0]);//Synset id
       Integer key2 = dictL.get(items1[1]);//Link type key
+      if (key2==null) System.err.println("Invalid link: "+key2);
       String[] targetSynsets = items[1].split(",");
       Integer[] values = new Integer[targetSynsets.length];
       for ( int i=0; i<targetSynsets.length; i++ ) {
@@ -245,8 +246,8 @@ public class OnMemoryWordNet {
       String[] items = line.split(SEP1);
       if (items.length!=2) continue; 
       Integer sidIndex = dictS.get(items[0]);
-      Integer wordIndex = dictW.get(items[1]);
-      if (wordIndex==null) System.out.println("OOD: "+items[1]);
+      Integer wordIndex = dictW.get(items[1].toLowerCase());
+      if (wordIndex==null) System.err.println("OOD: "+items[1]);
       retval[sidIndex] = wordIndex;
     }
     return retval;
@@ -271,6 +272,9 @@ public class OnMemoryWordNet {
       if (items.length!=2) continue; 
       Integer index = dictS.get(items[0]);
       String[] words = items[1].split(",");
+      for ( int i=0; i<words.length; i++ ) {
+        words[i] = words[i].toLowerCase();
+      }
       result.put(index, words);
     }
     return result;

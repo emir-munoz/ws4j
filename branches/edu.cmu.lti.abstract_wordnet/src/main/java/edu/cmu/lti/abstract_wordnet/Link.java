@@ -20,6 +20,10 @@ package edu.cmu.lti.abstract_wordnet;
  * Note that not all are supported in a specific version of WordNet
  * 
  * For the definition of each relationship, see http://wordnet.princeton.edu/man/wngloss.7WN.html
+ *
+ * Symbol definitions can be found in http://wordnet.princeton.edu/wordnet/man/wninput.5WN.html
+ * 
+ * Also see query data http://search.cpan.org/dist/WordNet-QueryData/QueryData.pm
  * 
  * @author Hideki Shima
  *
@@ -27,29 +31,43 @@ package edu.cmu.lti.abstract_wordnet;
 public enum Link {
 	// Comments include description and the number of instances found in v0.9
 	
-	also, //See also　2692
-	syns, //Synonyms 0
-	hype, //Hypernyms 89089
-	inst, //Instances 8577
-	hypo, //Hyponym   89089
-	hasi, //Has Instance 8577
-	mero, //Meronyms 0
-	mmem, //Meronyms --- Member 12293
-	msub, //Meronyms --- Substance 979
-	mprt, //Meronyms --- Part 9097
-	holo, //Holonyms 0
-	hmem, //Holonyms --- Member 12293
-	hsub, //Holonyms --- Substance 797
-	hprt, //Holonyms -- Part 9097
-	attr, //Attributes 1278
-	sim,  //Similar to 21386
-	enta, //Entails 408
-	caus, //Causes 220
-	dmnc, //Domain --- Category 6643
-	dmnu, //Domain --- Usage 967
-	dmnr, //Domain --- Region 1345
-	dmtc, //In Domain --- Category 6643
-	dmtu, //In Domain --- Usage 967
-	dmtr, //In Domain --- Region 1345
-	ants, //Antonyms 0
+	also("^"), //See also 2692
+	hype("@"), //Hypernyms 89089
+	inst("@i"), //Instances 8577 //Instance Hypernym
+	hypo("~"), //Hyponym   89089
+	hasi("~i"), //Has Instance 8577 //Instance Hyponym
+	mero("%"), //Meronyms 0
+	mmem("%m"), //Meronyms --- Member 12293
+	msub("%s"), //Meronyms --- Substance 979
+	mprt("%p"), //Meronyms --- Part 9097
+	holo("#"), //Holonyms 0
+	hmem("#m"), //Holonyms --- Member 12293
+	hsub("#s"), //Holonyms --- Substance 797
+	hprt("#p"), //Holonyms -- Part 9097
+	attr("="), //Attributes 1278
+	 sim("&"),  //Similar to 21386
+	enta("*"), //Entails 408
+	caus(">"), //Causes 220
+	dmnc("-c"), //Domain --- Category/TOPIC 6643 / (Domain of synset - TOPIC)
+	dmnu("-u"), //Domain --- Usage 967 / (Domain of synset - USAGE)
+	dmnr("-r"), //Domain --- Region 1345 / (Domain of synset - REGION)
+	dmtc(";c"), //In Domain --- Category 6643 / (Member of this domain - TOPIC)
+	dmtu(";u"), //In Domain --- Usage 967 / (Member of this domain - USAGE)
+	dmtr(";r"), //In Domain --- Region 1345 / (Member of this domain - REGION)
+	ants("!"), //Antonyms 0
+	vgrp("$"), //Verb Group
+	//relation over words
+  deri("+"), //Derivationally related form
+  part("<"), //Participle of verb
+	defa("\\"), //Derived from adjective
+	pert("\\"), //Pertainym (pertains to nouns)
+	;
+	
+	private String symbol;
+	Link( String symbol ) {
+	  this.symbol = symbol;
+	}
+  public String getSymbol() {
+    return symbol;
+  }
 }

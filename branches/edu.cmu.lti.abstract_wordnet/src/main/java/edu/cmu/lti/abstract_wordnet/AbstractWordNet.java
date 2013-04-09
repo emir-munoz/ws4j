@@ -29,25 +29,29 @@ public abstract class AbstractWordNet {
    * @return synsets or empty collection if N/A
    */
   public abstract List<Synset> getSynsets(String wordLemma, POS pos);
+  
+//  public abstract List<String> getSynsetsByWordLemma( String wordLemma );
+
+  public Synset getSynset( String wordLemma, POS pos, int senseId ) {
+    List<Synset> synsets = getSynsets(wordLemma, pos);
+    if (synsets==null) return null; 
+    return synsets.get(senseId-1);
+  }
 
   /**
    * Get word lemmas given synset.
    * 
-   * Used by HSO algorithm.
+   * The result should ideally be sorted by frequency (in descending order),
+   * for tracing purpose. See getSynsetLabel().
    * 
+   * Used by HSO algorithm and for tracing purpose.
+   * 
+   * @see getSynsetLabel()
    * @param synsetId
    * @return word lemmas associated with the given synset
    */
   public abstract List<String> getWordLemmas(String synsetId);
 
-//  /**
-//   * Optional method.
-//   * Convert synset to human-friendly strings for displaying log  
-//   * @param synsetId
-//   * @return interpretable string such as hoge#n#2 
-//   */
-//  public abstract String conceptToString(String synsetId);
-  
   /**
    * Given a synset s and link l, first find synsets S
    * that are connected to s with a link relation l, then
@@ -116,7 +120,7 @@ public abstract class AbstractWordNet {
    */
   public List<String> getHorizontals(String synsetId) {
     return getLinkedSynsets( synsetId, 
-            new Link[]{Link.ants, Link.attr, Link.sim} );
+            new Link[]{Link.also, Link.ants, Link.attr, Link.pert, Link.sim} );
   }
   
   /**
@@ -133,10 +137,10 @@ public abstract class AbstractWordNet {
    */
   public List<String> getUpwards(String synsetId) {
     return getLinkedSynsets( synsetId, 
-            new Link[]{Link.hype, Link.mero, Link.mmem, Link.mprt, Link.msub} );
+            new Link[]{Link.hype, Link.inst,//hypes 
+            Link.mmem, Link.msub,Link.mprt } );//mero 
   }
-  
-  
+
   /**
    * Given a synset id s, find synset(s) of  
    * direct downward term(s) of s.
@@ -151,8 +155,34 @@ public abstract class AbstractWordNet {
    */
   public List<String> getDownwards(String synsetId) {
     return getLinkedSynsets( synsetId,
-            new Link[]{Link.caus, Link.enta, Link.holo, 
-            Link.hmem, Link.hsub, Link.hprt, Link.hypo} );
+            new Link[]{Link.hmem, Link.hsub, Link.hprt,//holo 
+            Link.hypo, Link.hasi, //hypos
+            Link.caus, Link.enta, } );//etc
+  }
+  
+  public List<String> getHypes(String synsetId) {
+    return getLinkedSynsets( synsetId, 
+            new Link[]{Link.hype, Link.inst} );
+  }
+  public List<String> getHypos(String synsetId) {
+    return getLinkedSynsets( synsetId, 
+            new Link[]{Link.hypo, Link.hasi} );
+  }
+  public List<String> getAllMeronyms(String synsetId) {
+    return getLinkedSynsets( synsetId, 
+            new Link[]{Link.mmem, Link.msub,Link.mprt} );
+  }
+  public List<String> getAllHolonyms(String synsetId) {
+    return getLinkedSynsets( synsetId, 
+            new Link[]{Link.hmem,Link.hsub,Link.hprt} );
+  }
+  public List<String> getAllDomain(String synsetId) {
+    return getLinkedSynsets( synsetId, 
+            new Link[]{Link.dmnc,Link.dmnu,Link.dmnr} );
+  }
+  public List<String> getAllMemberOfDomain(String synsetId) {
+    return getLinkedSynsets( synsetId, 
+            new Link[]{Link.dmtc,Link.dmtu,Link.dmtr} );
   }
   
   private List<String> getLinkedSynsets( String synsetId, Link[] links ) {
@@ -187,15 +217,16 @@ public abstract class AbstractWordNet {
     List<String> glosses = new ArrayList<String>(linkedSynsetIds.size());
     for (String linkedSynsetId : linkedSynsetIds) {
       String gloss = null;
-      if (Link.syns.equals(link)) {
-        // Special case when you want name assigned to the synset, not the gloss.
-        gloss = getNameOfSynset(synsetId);
-        if (gloss == null) {
-          gloss = getNameOfSynset(linkedSynsetId);
-        }
-      } else { // This path is more common than above
+//    FIXME: temporary comment out
+//      if (Link.syns.equals(link)) {
+//        // Special case when you want name assigned to the synset, not the gloss.
+//        gloss = getNameOfSynset(synsetId);
+//        if (gloss == null) {
+//          gloss = getNameOfSynset(linkedSynsetId);
+//        }
+//      } else { // This path is more common than above
         gloss = getGloss( linkedSynsetId );
-      }
+//      }
 
       if (gloss == null ) continue; 
       
@@ -226,8 +257,9 @@ public abstract class AbstractWordNet {
       linkedSynsetIds.addAll(getLinkedSynsets(synsetId, Link.hmem.toString()));
       linkedSynsetIds.addAll(getLinkedSynsets(synsetId, Link.hsub.toString()));
       linkedSynsetIds.addAll(getLinkedSynsets(synsetId, Link.hprt.toString()));
-    } else if (link.equals(Link.syns)) {
-      linkedSynsetIds.add(synsetId);
+//      FIXME: temporary comment out
+//    } else if (link.equals(Link.syns)) {
+//      linkedSynsetIds.add(synsetId);
     } else {
       linkedSynsetIds.addAll(getLinkedSynsets(synsetId, link.toString()));
     }
@@ -236,15 +268,23 @@ public abstract class AbstractWordNet {
   
   /**
    * Given a synset id, get human-readable synset label e.g. "jogging#n#1"
+   * 
+   * There can be N ways to represent such label given synset with N words.
+   * This method uses the most frequent word out of N words, assuming that
+   * getWordLemmas returns a sorted list by frequency.
+   * 
+   * @see getWordLemmas()
    * @param synsetId
    * @return glosses or empty collection if N/A
    */
   public String getSynsetLabel( String synsetId ) {
     if (synsetId.equals("0")) return "*ROOT*";
     
-    String name = getNameOfSynset(synsetId);
+//    String name = getNameOfSynset(synsetId);
+    String mfw = getWordLemmas(synsetId).get(0);
+    
     POS pos = getPOS(synsetId);
-    List<Synset> synsets = getSynsets(name, pos);
+    List<Synset> synsets = getSynsets(mfw, pos);
     int num = -1;
     for ( int i=0; i<synsets.size(); i++ ) {
       Synset s = synsets.get(i);
@@ -253,7 +293,7 @@ public abstract class AbstractWordNet {
         break;
       }
     }
-    return name+"#"+pos.toString()+"#"+num;
+    return mfw+"#"+pos.toString()+"#"+num;
     
 //    Below is wrong implementation
 //    
@@ -290,5 +330,48 @@ public abstract class AbstractWordNet {
       return null;
     }
   }
+
+// public static List<Synset> wordToSynsets( String word, POS pos ) {
+//    List<Word> words = WordDAO.findWordsByLemmaAndPos(word, pos);
+//    List<Synset> results = new ArrayList<Synset>();
+//    for ( Word wordObj : words ) {
+//      int wordid = wordObj.getWordid();
+//      List<Sense> senses = SenseDAO.findSensesByWordid( wordid );
+//      for ( Sense sense : senses ) {
+//        Synset synset = new Synset( sense.getSynset(), null, null, null );
+//        results.add( synset );
+//      }
+//    }
+//    return results;
+//  }
+//
+//  public static List<Word> synsetToWords( String synset ) { 
+//    List<Word> words = new ArrayList<Word>();
+//    List<Sense> senses = SenseDAO.findSensesBySynset( synset );
+//    for ( Sense sense : senses ) {
+//      Word word = WordDAO.findWordByWordid( sense.getWordid() );
+//      words.add( word );
+//    }
+//    return words;
+//  }
+
+//  public static Set<String> findSynonyms( String word, POS pos, boolean translate ) {
+//    Set<String> results = new LinkedHashSet<String>();
+//    List<Synset> synsets = WordNetUtil.wordToSynsets( word, pos );
+//    Lang srcLang = findLang( word );
+//    Lang anotherLang = srcLang.equals(Lang.jpn)?Lang.eng:Lang.jpn;
+//    Lang targetLang = translate?anotherLang:srcLang;
+//    for ( Synset synset : synsets ) {
+//      List<Sense> moreSenses = SenseDAO.findSensesBySynsetAndLang(synset.getSynset(), targetLang);
+//      for ( Sense moreSense : moreSenses ) {
+//        Word synonym = WordDAO.findWordByWordid( moreSense.getWordid() );
+//        results.add( synonym.getLemma() );
+//      }
+//    }
+//    // remove the original if any
+//    results.remove( word );
+//    return results;
+//  }
   
+    
 }
