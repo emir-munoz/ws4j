@@ -31,8 +31,6 @@ public class Synset implements Cloneable {
 
   private POS pos;
 
-  private String name;
-
   public Synset(String synsetId) {
     this.synsetId = synsetId;
   }
@@ -45,7 +43,6 @@ public class Synset implements Cloneable {
   public Synset(String synsetId, POS pos, String name) {
     this.synsetId = synsetId;
     this.pos = pos;
-    this.name = name;
   }
 
   /**
@@ -56,8 +53,7 @@ public class Synset implements Cloneable {
     StringBuilder sb = new StringBuilder();
     sb.append("{ ");
     sb.append("\"synsetId\":\"" + synsetId + "\", ");
-    sb.append("\"pos\":\"" + pos + "\", ");
-    sb.append("\"name\":\"" + name + "\"");
+    sb.append("\"pos\":\"" + pos + "\"");
     sb.append(" }");
     return sb.toString();
   }
@@ -98,30 +94,8 @@ public class Synset implements Cloneable {
     this.pos = pos;
   }
 
-  /**
-   * @return the name
-   */
-  public String getName() {
-    if (name == null) {
-      // Synset realSynset = SynsetDAO.findSynsetBySynset( getSynset() );
-      // setName( realSynset.getName() );
-      // setPos( realSynset.getPos() );
-      // setSrc( realSynset.getSrc() );
-      // return name;
-    }
-    return name;
-  }
-
-  /**
-   * @param name
-   *          the name to set
-   */
-  public void setName(String name) {
-    this.name = name;
-  }
-
   @Override
   public Synset clone() {
-    return new Synset(synsetId, POS.valueOf(pos.toString()), name);
+    return new Synset(synsetId, POS.valueOf(pos.toString()));
   }
 }
