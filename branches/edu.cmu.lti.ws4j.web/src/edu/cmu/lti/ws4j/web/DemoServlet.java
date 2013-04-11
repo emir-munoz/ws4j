@@ -17,7 +17,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import edu.cmu.lti.abstract_wordnet.AbstractWordNet;
 import edu.cmu.lti.abstract_wordnet.POS;
-import edu.cmu.lti.ram_wordnet.OnMemoryWordNetAPI;
+import edu.cmu.lti.abstract_wordnet.WordNetFactory;
 import edu.cmu.lti.ws4j.Relatedness;
 import edu.cmu.lti.ws4j.RelatednessCalculator;
 import edu.cmu.lti.ws4j.RelatednessCalculator.Parameters;
@@ -85,19 +85,21 @@ public class DemoServlet extends HttpServlet {
     sbForm.append("<table class='form'>\n");
     sbForm.append("<tr><td class='th1'>1. </td><td class='th1'>Input mode</td><td>\n");
     sbForm.append("<input type='radio' name='mode' value='s' id='s_mode' onclick='sentMode()' "+(wordMode?"":"checked")+"><label for='s_mode'>Sentence</label>&nbsp;&nbsp;&nbsp;\n");
-    sbForm.append("<input type='radio' name='mode' value='w' id='w_mode' onclick='wordMode()' "+(wordMode?"checked":"")+"><label for='w_mode' title='format: \"dog\" or \"dog#n\" or \"dog#n#1\"'>Word</label></td></tr>\n");
+    sbForm.append("<input type='radio' name='mode' value='w' id='w_mode' onclick='wordMode()' "+(wordMode?"checked":"")+"><label for='w_mode'>Word</label></td></tr>\n");
     sbForm.append("<tr><td>2. </td><td><span class='mode_label'>Sentence</span> 1</td><td>\n");
     sbForm.append("<div id='s1wrapper' style='display:"+(wordMode?"none":"block")+"'><textarea rows='4' cols='40' id='s1' name='s1' placeholder='the first sentence goes here'>"+(s1==null?"":s1)+"</textarea></div>\n");
-    sbForm.append("<div id='w1wrapper' style='display:"+(wordMode?"block":"none")+"'><input id='w1' name='w1' placeholder='the first word' value='"+(w1==null?"":w1)+"'></div></td></tr>\n");
+    sbForm.append("<div id='w1wrapper' style='display:"+(wordMode?"block":"none")+"'><input id='w1' name='w1' placeholder='the first word' value='"+(w1==null?"":w1)+"' title='Type in the first word, word+pos, or word+pos+sense number.\n\nexample: \"bank\" or \"bank#n\" or \"bank#n#2\"'></div></td></tr>\n");
     sbForm.append("<tr><td>3. </td><td><span class='mode_label'>Sentence</span> 2</td><td>\n");
     sbForm.append("<div id='s2wrapper' style='display:"+(wordMode?"none":"block")+"'><textarea rows='4' cols='40' id='s2' name='s2' placeholder='the second sentence goes here'>"+(s2==null?"":s2)+"</textarea></div>\n");
-    sbForm.append("<div id='w2wrapper' style='display:"+(wordMode?"block":"none")+"'><input id='w2' name='w2' placeholder='the second word' value='"+(w2==null?"":w2)+"'></div></td></tr>\n");
+    sbForm.append("<div id='w2wrapper' style='display:"+(wordMode?"block":"none")+"'><input id='w2' name='w2' placeholder='the second word' value='"+(w2==null?"":w2)+"' title='Similarly, type in another one.\n\nexample: \"hedge_fund\" or \"hedge_fund#n\" or \"hedge_fund#n#1\"'></div></td></tr>\n");
     sbForm.append("<tr><td>4. </td><td>Submit</td><td><div style='text-align:center'><input type='submit' value='       Calculate Semantic Similarity       '></div></td></tr>\n");
     sbForm.append("</table></form>\n");
     out.println( sbForm );
   }
 
   public void runOnWords( PrintWriter out, String w1, String w2, String measure ) {
+    w1 = w1.trim().replaceFirst("#+$", "");
+    w2 = w2.trim().replaceFirst("#+$", "");
 //    WS4JConfiguration.getInstance().setTrace(true);//doesn't work here
 //    long t00 = System.currentTimeMillis();
     List<Measure> measures;
@@ -117,7 +119,7 @@ public class DemoServlet extends HttpServlet {
         sbResult.append(m+" demo is coming soon.");
       } else { 
         Relatedness r = rc.calcRelatednessOfWords(w1, w2, true);
-        String log = r.getTrace().replaceAll(" < "," &lt; ").replaceAll("\n", "<br>\n");
+        String log = (r.getError()+"\n\n"+r.getTrace()).replaceAll(" < "," &lt; ").replaceAll("\n", "<br>\n");
         StringBuffer sb = new StringBuffer();
         Pattern patter = Pattern.compile("((^|\\n)[a-z]{3}\\(.+?\\) = [0-9.Ee-]+)");
         Matcher matcher = patter.matcher(log);
@@ -240,7 +242,7 @@ public class DemoServlet extends HttpServlet {
 //      stemmer = new KStemmer();
       WS4JConfiguration.getInstance().setMFS(false);
       WS4JConfiguration.getInstance().setLeskNormalize(false);
-      wn = new OnMemoryWordNetAPI();
+      wn = WordNetFactory.getCachedInstanceForName("edu.cmu.lti.ram_wordnet.OnMemoryWordNetAPI");
       rcs = new LinkedHashMap<Measure,RelatednessCalculator>();
       rcs.put(Measure.WUP,  new WuPalmer(wn));
       rcs.put(Measure.RES,  new Resnik(wn));
@@ -272,9 +274,13 @@ public class DemoServlet extends HttpServlet {
     sb.append("<head>\n");
     sb.append("<title>WS4J Demo</title>\n");
     sb.append("<meta charset=\"utf-8\" />\n");
-    sb.append("<link rel=\"stylesheet\" type=\"text/css\" href=\"/demo.css\">\n");
-    sb.append("<script type=\"text/javascript\" src=\"http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js\"></script>\n");
-    sb.append("<script type=\"text/javascript\" src=\"/demo.js\"></script>\n");
+    sb.append("<link rel=\"stylesheet\" href=\"/css/demo.css\">\n");
+    sb.append("<link rel=\"stylesheet\" href=\"/css/tipsy.css\">\n");
+    sb.append("<link rel=\"stylesheet\" href=\"http://code.jquery.com/ui/1.10.2/themes/smoothness/jquery-ui.css\" />\n");
+    sb.append("<script src=\"//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js\"></script>\n");
+    sb.append("<script src=\"//ajax.googleapis.com/ajax/libs/jqueryui/1.10.2/jquery-ui.min.js\"></script>\n");
+    sb.append("<script type=\"text/javascript\" src=\"/js/demo.js\"></script>\n");
+    sb.append("<script type=\"text/javascript\" src=\"/js/jquery.tipsy.js\"></script>\n");
     sb.append("</head>\n");
     sb.append("<body>\n");
     return sb.toString();
