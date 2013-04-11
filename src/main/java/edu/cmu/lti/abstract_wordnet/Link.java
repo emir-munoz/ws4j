@@ -61,6 +61,7 @@ public enum Link {
   part("<"), //Participle of verb
 	defa("\\"), //Derived from adjective
 	pert("\\"), //Pertainym (pertains to nouns)
+	syns(null), //(words sharing) the same synset
 	;
 	
 	private String symbol;
