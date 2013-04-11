@@ -213,20 +213,23 @@ public abstract class AbstractWordNet {
       // note: use of try-catch slows down
       linkedSynsetIds.add(synsetId);
     }
+    
+    if (linkString.equals("syns")) {
+      
+    }
 
     List<String> glosses = new ArrayList<String>(linkedSynsetIds.size());
     for (String linkedSynsetId : linkedSynsetIds) {
       String gloss = null;
-//    FIXME: temporary comment out
-//      if (Link.syns.equals(link)) {
-//        // Special case when you want name assigned to the synset, not the gloss.
-//        gloss = getNameOfSynset(synsetId);
-//        if (gloss == null) {
-//          gloss = getNameOfSynset(linkedSynsetId);
-//        }
-//      } else { // This path is more common than above
+      if (Link.syns.equals(link)) {
+        // Special case when you want name assigned to the synset, not the gloss.
+        gloss = getNameOfSynset(synsetId);
+        if (gloss == null) {
+          gloss = getNameOfSynset(linkedSynsetId);
+        }
+      } else { // This path is more common than above
         gloss = getGloss( linkedSynsetId );
-//      }
+      }
 
       if (gloss == null ) continue; 
       
@@ -257,9 +260,8 @@ public abstract class AbstractWordNet {
       linkedSynsetIds.addAll(getLinkedSynsets(synsetId, Link.hmem.toString()));
       linkedSynsetIds.addAll(getLinkedSynsets(synsetId, Link.hsub.toString()));
       linkedSynsetIds.addAll(getLinkedSynsets(synsetId, Link.hprt.toString()));
-//      FIXME: temporary comment out
-//    } else if (link.equals(Link.syns)) {
-//      linkedSynsetIds.add(synsetId);
+    } else if (link.equals(Link.syns)) {
+      linkedSynsetIds.add(synsetId);
     } else {
       linkedSynsetIds.addAll(getLinkedSynsets(synsetId, link.toString()));
     }
@@ -279,12 +281,26 @@ public abstract class AbstractWordNet {
    */
   public String getSynsetLabel( String synsetId ) {
     if (synsetId.equals("0")) return "*ROOT*";
-    
 //    String name = getNameOfSynset(synsetId);
     String mfw = getWordLemmas(synsetId).get(0);
-    
+    return getSynsetLabel( synsetId, mfw );
+  }
+  
+  /**
+   * Given a synset id, get human-readable synset label e.g. "jogging#n#1"
+   * 
+   * There can be N ways to represent such label given synset with N words.
+   * This method uses the most frequent word out of N words, assuming that
+   * getWordLemmas returns a sorted list by frequency.
+   * 
+   * @see getWordLemmas()
+   * @param synsetId
+   * @return glosses or empty collection if N/A
+   */
+  public String getSynsetLabel( String synsetId, String lemma ) {
+    if (synsetId.equals("0")) return "*ROOT*";
     POS pos = getPOS(synsetId);
-    List<Synset> synsets = getSynsets(mfw, pos);
+    List<Synset> synsets = getSynsets(lemma, pos);
     int num = -1;
     for ( int i=0; i<synsets.size(); i++ ) {
       Synset s = synsets.get(i);
@@ -293,7 +309,7 @@ public abstract class AbstractWordNet {
         break;
       }
     }
-    return mfw+"#"+pos.toString()+"#"+num;
+    return lemma+"#"+pos.toString()+"#"+num;
     
 //    Below is wrong implementation
 //    
@@ -330,6 +346,13 @@ public abstract class AbstractWordNet {
       return null;
     }
   }
+  
+  /**
+   * (Optional method to implement)
+   *  
+   * @return all words (lemmas) available for look up in WordNet
+   */
+  public abstract Set<String> dumpWords();
 
 // public static List<Synset> wordToSynsets( String word, POS pos ) {
 //    List<Word> words = WordDAO.findWordsByLemmaAndPos(word, pos);
