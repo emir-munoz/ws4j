@@ -32,10 +32,18 @@ public abstract class AbstractWordNetDumper {
   public abstract Map<String,String> dumpSynset2Gloss();
   
   public abstract Map<String,String> dumpSynsetLinkSynsets();
-  
+
   public abstract Map<String,String> dumpSynset2Name();
   
   public abstract Map<String,String> dumpSynset2WordLemmas();
+
+  /**
+   * Format: synset id, lemma, link [tab] linked synset id, linked word lemma
+   * 00001740-v,breathe,deri 04250850-n,breather,00831191-n,breathing
+   * 
+   * @return
+   */
+  public abstract Map<String,String> dumpWordLinkWords();
   
   public void dump( String filename, Map<String,String> map ) throws Exception {
     FileOutputStream fos = new FileOutputStream( filename );
@@ -51,6 +59,7 @@ public abstract class AbstractWordNetDumper {
 
   public void dumpWordNet() throws Exception {
     dump( "target/word-synsets.txt", dumpWord2Synsets() );
+    dump( "target/word-link-words.txt", dumpWordLinkWords() );
     dump( "target/synset-link-synsets.txt", dumpSynsetLinkSynsets() );
     dump( "target/synset-gloss.txt", dumpSynset2Gloss() );
     dump( "target/synset-name.txt", dumpSynset2Name() );

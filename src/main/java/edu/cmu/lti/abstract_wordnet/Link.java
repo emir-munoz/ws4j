@@ -60,7 +60,7 @@ public enum Link {
   deri("+"), //Derivationally related form
   part("<"), //Participle of verb
 	defa("\\"), //Derived from adjective
-	pert("\\"), //Pertainym (pertains to nouns)
+	pert("\\"), //Pertainym (adj pertains to nouns)
 	syns(null), //(words sharing) the same synset
 	;
 	
