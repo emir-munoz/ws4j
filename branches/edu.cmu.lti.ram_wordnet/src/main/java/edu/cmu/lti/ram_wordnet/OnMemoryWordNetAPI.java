@@ -44,7 +44,7 @@ public class OnMemoryWordNetAPI extends AbstractWordNet {
 
   @Override
   public String getGloss(String synsetId) {
-    return wn.synset2gloss[wn.dictS.get(synsetId)];
+    return String.valueOf(wn.synset2gloss[wn.dictS.get(synsetId)]);
   }
 
   @Override
@@ -92,7 +92,7 @@ public class OnMemoryWordNetAPI extends AbstractWordNet {
   public static void main(String[] args) {
     long t0 = System.currentTimeMillis();
     try {
-      new OnMemoryWordNetAPI();
+      System.out.println(new OnMemoryWordNetAPI().getSynset("stellar", POS.a, 2).getSynsetId());
     } catch (Exception e) {
       e.printStackTrace();
     }

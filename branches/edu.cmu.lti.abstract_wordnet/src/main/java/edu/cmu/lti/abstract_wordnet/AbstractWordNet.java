@@ -34,7 +34,8 @@ public abstract class AbstractWordNet {
 
   public Synset getSynset( String wordLemma, POS pos, int senseId ) {
     List<Synset> synsets = getSynsets(wordLemma, pos);
-    if (synsets==null) return null; 
+    if (synsets==null) return null;
+//    if (synsets.size()<senseId) return null;
     return synsets.get(senseId-1);
   }
 
@@ -192,81 +193,81 @@ public abstract class AbstractWordNet {
     }
     return new ArrayList<String>(retval);
   }
-  
-  /**
-   * Given a synset s and link l, first find synsets S
-   * that are connected to s with a link relation l, then
-   * return gloss (dictionary definition) for each members of S  
-   * @param synsetId
-   * @param linkString
-   * @return glosses or empty collection if N/A
-   */
-  public List<String> getGloss(String synsetId, String linkString) {
-    List<String> linkedSynsetIds = new ArrayList<String>();
-    Link link = null;
-    try {
-      link = Link.valueOf(linkString);
-      linkedSynsetIds = findLinkedSynsetIds(synsetId, link);
-    } catch (IllegalArgumentException e) {
-      // I know it's not a good use of catching
-      // this is how normal gloss is obtained
-      // note: use of try-catch slows down
-      linkedSynsetIds.add(synsetId);
-    }
-    
-    if (linkString.equals("syns")) {
-      
-    }
-
-    List<String> glosses = new ArrayList<String>(linkedSynsetIds.size());
-    for (String linkedSynsetId : linkedSynsetIds) {
-      String gloss = null;
-      if (Link.syns.equals(link)) {
-        // Special case when you want name assigned to the synset, not the gloss.
-        gloss = getNameOfSynset(synsetId);
-        if (gloss == null) {
-          gloss = getNameOfSynset(linkedSynsetId);
-        }
-      } else { // This path is more common than above
-        gloss = getGloss( linkedSynsetId );
-      }
-
-      if (gloss == null ) continue; 
-      
-      //postprocess
-      //gloss = gloss.replaceAll("[^a-zA-Z0-9]", " ");  
-      gloss = gloss.replaceAll("[.;:,?!(){}\"`$%@<>]", " ");
-      gloss = gloss.replaceAll("&", " and ");
-      gloss = gloss.replaceAll("_", " ");
-      gloss = gloss.replaceAll("[ ]+", " ");
-      gloss = gloss.replaceAll("(?<!\\w)'", " ");
-      gloss = gloss.replaceAll("'(?!\\w)", " ");
-      gloss = gloss.replaceAll("--", " ");
-      gloss = gloss.toLowerCase();
-      
-      glosses.add( gloss );
-    }
-    return glosses;
-  }
-
-  private List<String> findLinkedSynsetIds(String synsetId, Link link)
-          throws IllegalArgumentException {
-    List<String> linkedSynsetIds = new ArrayList<String>();
-    if (link.equals(Link.mero)) {
-      linkedSynsetIds.addAll(getLinkedSynsets(synsetId, Link.mmem.toString()));
-      linkedSynsetIds.addAll(getLinkedSynsets(synsetId, Link.msub.toString()));
-      linkedSynsetIds.addAll(getLinkedSynsets(synsetId, Link.mprt.toString()));
-    } else if (link.equals(Link.holo)) {
-      linkedSynsetIds.addAll(getLinkedSynsets(synsetId, Link.hmem.toString()));
-      linkedSynsetIds.addAll(getLinkedSynsets(synsetId, Link.hsub.toString()));
-      linkedSynsetIds.addAll(getLinkedSynsets(synsetId, Link.hprt.toString()));
-    } else if (link.equals(Link.syns)) {
-      linkedSynsetIds.add(synsetId);
-    } else {
-      linkedSynsetIds.addAll(getLinkedSynsets(synsetId, link.toString()));
-    }
-    return linkedSynsetIds;
-  }
+//  
+//  /**
+//   * Given a synset s and link l, first find synsets S
+//   * that are connected to s with a link relation l, then
+//   * return gloss (dictionary definition) for each members of S  
+//   * @param synsetId
+//   * @param linkString
+//   * @return glosses or empty collection if N/A
+//   */
+//  public List<String> getGloss(String synsetId, String linkString) {
+//    List<String> linkedSynsetIds = new ArrayList<String>();
+//    Link link = null;
+//    try {
+//      link = Link.valueOf(linkString);
+//      linkedSynsetIds = findLinkedSynsetIds(synsetId, link);
+//    } catch (IllegalArgumentException e) {
+//      // I know it's not a good use of catching
+//      // this is how normal gloss is obtained
+//      // note: use of try-catch slows down
+//      linkedSynsetIds.add(synsetId);
+//    }
+//    
+//    if (linkString.equals("syns")) {
+//      
+//    }
+//
+//    List<String> glosses = new ArrayList<String>(linkedSynsetIds.size());
+//    for (String linkedSynsetId : linkedSynsetIds) {
+//      String gloss = null;
+//      if (Link.syns.equals(link)) {
+//        // Special case when you want name assigned to the synset, not the gloss.
+//        gloss = getNameOfSynset(synsetId);
+//        if (gloss == null) {
+//          gloss = getNameOfSynset(linkedSynsetId);
+//        }
+//      } else { // This path is more common than above
+//        gloss = getGloss( linkedSynsetId );
+//      }
+//
+//      if (gloss == null ) continue; 
+//      
+//      //postprocess
+//      //gloss = gloss.replaceAll("[^a-zA-Z0-9]", " ");  
+//      gloss = gloss.replaceAll("[.;:,?!(){}\"`$%@<>]", " ");
+//      gloss = gloss.replaceAll("&", " and ");
+//      gloss = gloss.replaceAll("_", " ");
+//      gloss = gloss.replaceAll("[ ]+", " ");
+//      gloss = gloss.replaceAll("(?<!\\w)'", " ");
+//      gloss = gloss.replaceAll("'(?!\\w)", " ");
+//      gloss = gloss.replaceAll("--", " ");
+//      gloss = gloss.toLowerCase();
+//      
+//      glosses.add( gloss );
+//    }
+//    return glosses;
+//  }
+//
+//  private List<String> findLinkedSynsetIds(String synsetId, Link link)
+//          throws IllegalArgumentException {
+//    List<String> linkedSynsetIds = new ArrayList<String>();
+//    if (link.equals(Link.mero)) {
+//      linkedSynsetIds.addAll(getLinkedSynsets(synsetId, Link.mmem.toString()));
+//      linkedSynsetIds.addAll(getLinkedSynsets(synsetId, Link.msub.toString()));
+//      linkedSynsetIds.addAll(getLinkedSynsets(synsetId, Link.mprt.toString()));
+//    } else if (link.equals(Link.holo)) {
+//      linkedSynsetIds.addAll(getLinkedSynsets(synsetId, Link.hmem.toString()));
+//      linkedSynsetIds.addAll(getLinkedSynsets(synsetId, Link.hsub.toString()));
+//      linkedSynsetIds.addAll(getLinkedSynsets(synsetId, Link.hprt.toString()));
+//    } else if (link.equals(Link.syns)) {
+//      linkedSynsetIds.add(synsetId);
+//    } else {
+//      linkedSynsetIds.addAll(getLinkedSynsets(synsetId, link.toString()));
+//    }
+//    return linkedSynsetIds;
+//  }
   
   /**
    * Given a synset id, get human-readable synset label e.g. "jogging#n#1"

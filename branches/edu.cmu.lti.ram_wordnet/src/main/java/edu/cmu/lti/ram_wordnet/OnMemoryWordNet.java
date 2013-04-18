@@ -45,7 +45,7 @@ public class OnMemoryWordNet {
   public int[][] synset2words;
   public LinkedSynsets[] synset2synset;
   public int[] synset2name;
-  public String[] synset2gloss;
+  public char[][] synset2gloss;
   
   public OnMemoryWordNet() {
     MemoryMonitor m = new MemoryMonitor();
@@ -251,12 +251,12 @@ public class OnMemoryWordNet {
     return retval;
   }
   
-  private String[] initSynset2Gloss( Map<String,String> synset2glossTemp, 
+  private char[][] initSynset2Gloss( Map<String,String> synset2glossTemp, 
           BiMap<String,Integer> dictS ) throws IOException {
-    String[] result = new String[synset2glossTemp.size()];
+    char[][] result = new char[synset2glossTemp.size()][];
     for ( Entry<String,String> e : synset2glossTemp.entrySet() ) {
       Integer index = dictS.get(e.getKey());
-      result[index] = e.getValue();
+      result[index] = e.getValue().toCharArray();
     }
     return result;
   }
