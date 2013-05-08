@@ -182,8 +182,10 @@ public abstract class AbstractWordNet {
   protected List<Synset> getLinkedSynsets( Synset synset, Link[] links ) {
     List<Synset> retval = new ArrayList<Synset>();
     for ( Link link : links ) {
-      retval.addAll( getLinkedSynsets( synset, link ) );
-      if (lenient || synset.getWord()!=null) {
+      if (link.isDefinedAmongSynsets()) {
+        retval.addAll( getLinkedSynsets( synset, link ) );
+      }
+      if (link.isDefinedAmongWords() && (lenient || synset.getWord()!=null)) {
         retval.addAll( getLinkedWords( synset.getSynsetId(), synset.getWord(), link ) );
       }
     }

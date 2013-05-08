@@ -92,8 +92,8 @@ public class OnMemoryWordNet {
   }
   
   private BiMap<String,Integer> createDict( Map<Integer,String[]> map, int[] count ) {
-    Set<String> lcUnique = new LinkedHashSet<String>();
-    Set<String> nonlcUnique = new LinkedHashSet<String>();
+    Set<String> lcUnique = new LinkedHashSet<String>(map.size());
+    Set<String> nonlcUnique = new LinkedHashSet<String>(map.size());
     for ( String[] words : map.values() ) {
       for ( String w : words ) {
         // Input is already in LC, but dict must have both entries
@@ -108,7 +108,7 @@ public class OnMemoryWordNet {
     count[1] = nonlcUnique.size();
     BiMap<String,Integer> retval = HashBiMap.create(lcUnique.size()+nonlcUnique.size());
     int i=0;
-    for ( String w : lcUnique ) {
+    for ( String w : lcUnique ) {//LC first!
       retval.put(w, i++);
     }
     for ( String w : nonlcUnique ) {
@@ -139,14 +139,7 @@ public class OnMemoryWordNet {
 //      String lcWord = cannonicalize(origWord);
       Integer wordIndex = dictW.get(lcWord);
       if (wordIndex==null) {
-        if (LC_KEY) {
-          System.err.println("word not in index: "+kvs[0]+" -> "+lcWord);
-        } else {
-          wordIndex = dictW.get(lcWord);
-          if (wordIndex==null) {
-            System.err.println("word not in index: "+kvs[0]+" -> "+lcWord);
-          }
-        }
+        System.err.println("word not in index: "+kvs[0]+" -> "+lcWord);
       }
       POSAndSynsets posAndSynsets = new POSAndSynsets(kvs.length-1);
       for ( int i=1; i<kvs.length; i++ ) {

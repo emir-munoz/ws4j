@@ -41,6 +41,7 @@ public class OnMemoryWordNetAPI extends AbstractWordNet {
           Synset s = new Synset(strSynset, lcWord, pos);
           retval.add(s);
         }
+        break;//once found, no need to look further
       }
     }
     return retval;
@@ -54,6 +55,7 @@ public class OnMemoryWordNetAPI extends AbstractWordNet {
   @Override
   public List<Synset> getLinkedSynsets(Synset synset, Link link) {
     List<Synset> retval = new ArrayList<Synset>();
+    if (!link.isDefinedAmongSynsets()) return retval;
     LinkedSynsets ls = wn.synset2synset[wn.dictS.get(synset.getSynsetId())];
     if (ls==null) return retval;
     for (int i = 0; i < ls.size(); i++) {
@@ -70,6 +72,7 @@ public class OnMemoryWordNetAPI extends AbstractWordNet {
   @Override
   public List<Synset> getLinkedWords(String synsetId, String word, Link link) {
     List<Synset> retval = new ArrayList<Synset>();
+    if (!link.isDefinedAmongWords()) return retval;
     LinkedWords lw = wn.word2words[wn.dictS.get(synsetId)];
     if (lw==null) return retval;
 //    Integer linkIndex = wn.dictL.get(linkString);
