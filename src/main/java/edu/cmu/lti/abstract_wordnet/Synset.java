@@ -30,6 +30,19 @@ public class Synset implements Cloneable {
   private String synsetId; 
 
   private POS pos;
+  
+  /**
+   * Original word lemma may be stored out of  
+   * multiple word lemmas associated with this synset.
+   * 
+   * for two purposes
+   * 
+   * 1. For logging purpose - only one lemma is displayed in the human readable form e.g. "dog#n#1"
+   * 2. Some relations (e.g. pertainym, antonym) are defined only on specific lemma in a synset. 
+   * HSO/LESK uses such relations.
+   * 
+   */
+  private String word;
 
   public Synset(String synsetId) {
     this.synsetId = synsetId;
@@ -40,8 +53,9 @@ public class Synset implements Cloneable {
     this.pos = pos;
   }
 
-  public Synset(String synsetId, POS pos, String name) {
+  public Synset(String synsetId, String word, POS pos) {
     this.synsetId = synsetId;
+    this.word = word;
     this.pos = pos;
   }
 
@@ -53,6 +67,7 @@ public class Synset implements Cloneable {
     StringBuilder sb = new StringBuilder();
     sb.append("{ ");
     sb.append("\"synsetId\":\"" + synsetId + "\", ");
+    sb.append("\"word\":\"" + word + "\", ");
     sb.append("\"pos\":\"" + pos + "\"");
     sb.append(" }");
     return sb.toString();
@@ -92,6 +107,14 @@ public class Synset implements Cloneable {
    */
   public void setPos(POS pos) {
     this.pos = pos;
+  }
+  
+  public String getWord() {
+    return word;
+  }
+
+  public void setWord(String word) {
+    this.word = word;
   }
 
   @Override
