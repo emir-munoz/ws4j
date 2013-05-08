@@ -20,7 +20,13 @@ public abstract class AbstractWordNetDumper {
   protected final static String SEP2 = ",";//inside key or value, multiple items are concatenated with this
   
   /**
-   * Dump all combinations of word and pos 
+   * Dump all combinations of word and pos.
+   * 
+   * NG (freq order of sense lost):
+   * CAT  n,00901476-n
+   * cat  n,02121620-n,10153414-n,09900153-n,03608870-n,02985606-n,02983507-n,02127808-n  v,01411870-v,00076400-v
+   * 
+   * 
    * @return unique entries of word and pos concatenated with tab
    */
   public abstract Map<String,String> dumpWord2Synsets();
@@ -33,7 +39,7 @@ public abstract class AbstractWordNetDumper {
   
   public abstract Map<String,String> dumpSynsetLinkSynsets();
 
-  public abstract Map<String,String> dumpSynset2Name();
+//  public abstract Map<String,String> dumpSynset2Name();
   
   public abstract Map<String,String> dumpSynset2WordLemmas();
 
@@ -62,7 +68,7 @@ public abstract class AbstractWordNetDumper {
     dump( "target/word-link-words.txt", dumpWordLinkWords() );
     dump( "target/synset-link-synsets.txt", dumpSynsetLinkSynsets() );
     dump( "target/synset-gloss.txt", dumpSynset2Gloss() );
-    dump( "target/synset-name.txt", dumpSynset2Name() );
+//    dump( "target/synset-name.txt", dumpSynset2Name() );
     dump( "target/synset-words.txt", dumpSynset2WordLemmas() );
   }
   

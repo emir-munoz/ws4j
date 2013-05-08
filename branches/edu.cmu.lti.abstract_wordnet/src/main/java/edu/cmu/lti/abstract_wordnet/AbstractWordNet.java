@@ -16,7 +16,7 @@
 package edu.cmu.lti.abstract_wordnet;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -34,8 +34,8 @@ public abstract class AbstractWordNet {
 
   public Synset getSynset( String wordLemma, POS pos, int senseId ) {
     List<Synset> synsets = getSynsets(wordLemma, pos);
-    if (synsets==null) return null;
-//    if (synsets.size()<senseId) return null;
+    if ( synsets==null ) return null;
+    if ( synsets.size() < senseId ) return null;
     return synsets.get(senseId-1);
   }
 
@@ -54,14 +54,30 @@ public abstract class AbstractWordNet {
   public abstract List<String> getWordLemmas(String synsetId);
 
   /**
-   * Given a synset s and link l, first find synsets S
-   * that are connected to s with a link relation l, then
-   * return gloss (dictionary definition) for each members of S  
+   * Given a synset s and link l, find synsets S
+   * that are connected to s with a link relation l
    * @param synsetId
-   * @param linkString
+   * @param link
    * @return glosses or empty collection if N/A
    */
-  public abstract List<String> getLinkedSynsets(String synsetId, String linkString);
+  public abstract List<Synset> getLinkedSynsets(Synset synset, Link link);
+  
+  /**
+   * Given a synset s, word w and link l, first find synsets and words
+   * that are connected to s with a link relation l.
+   * 
+   * The following links are defined over (synset,word) and (synset,word)
+   * rather than (synset) and (synset): 
+   * also, dmnc, dmnu, dmnr, dmtc, dmtu, dmtr, ants, vgrp, deri, part, defa, pert
+   * 
+   * When the word is null, return synsets assuming corresponding word is given.
+   * 
+   * @param synsetId
+   * @param word
+   * @param link
+   * @return glosses or empty collection if N/A
+   */
+  public abstract List<Synset> getLinkedWords(String synsetId, String word, Link link);
 
   /**
    * Given a synset s, find gloss (dictionary definition) of s  
@@ -71,22 +87,6 @@ public abstract class AbstractWordNet {
    */
   public abstract String getGloss( String synsetId );
 
-  /**
-   * Given a synset id (e.g. "00512691-r"), return name of the synset (e.g. "adjectivally") 
-   * 
-   * Used by Lesk and for tracing.
-   * 
-   * @param synsetId 
-   * @return name of synset
-   */
-  public String getNameOfSynset( String synsetId ) {
-    if ( synsetId==null ) return null;
-    if ( synsetId.equals("0") ) return "*ROOT*";
-    return _getNameOfSynset(synsetId);
-  }
-  
-  protected abstract String _getNameOfSynset( String synsetId );
-  
   /**
    * Given word and pos, find the most frequent synset
    * (in wordnet, it's the top item).
@@ -101,17 +101,6 @@ public abstract class AbstractWordNet {
 
   /**
    * Given a synset id s, find synset(s) of  
-   * direct hypernym(s) of s.
-   * @param synsetId
-   * @return synsets of direct hypernym or empty collection if N/A
-   */
-  public List<String> getHypernyms(String synsetId) {
-    return getLinkedSynsets( synsetId, 
-            new Link[]{Link.hype} );
-  }
-  
-  /**
-   * Given a synset id s, find synset(s) of  
    * direct horizontal term(s) of s.
    * 
    * Such terms are linked with relations such as: ants, attr, sim.
@@ -119,9 +108,10 @@ public abstract class AbstractWordNet {
    * @param synsetId
    * @return synsets of direct hypernym or empty collection if N/A
    */
-  public List<String> getHorizontals(String synsetId) {
-    return getLinkedSynsets( synsetId, 
-            new Link[]{Link.also, Link.ants, Link.attr, Link.pert, Link.sim} );
+  public List<Synset> getHorizontals(Synset synset) {
+    return getLinkedSynsets( synset, 
+            new Link[]{Link.also, Link.attr, Link.sim, 
+            Link.ants, Link.pert} );
   }
   
   /**
@@ -133,11 +123,11 @@ public abstract class AbstractWordNet {
    * 
    * Used by HSO algorithm.
    * 
-   * @param synsetId
+   * @param synset
    * @return synsets of direct hypernym or empty collection if N/A
    */
-  public List<String> getUpwards(String synsetId) {
-    return getLinkedSynsets( synsetId, 
+  public List<Synset> getUpwards(Synset synset) {
+    return getLinkedSynsets( synset, 
             new Link[]{Link.hype, Link.inst,//hypes 
             Link.mmem, Link.msub,Link.mprt } );//mero 
   }
@@ -151,123 +141,64 @@ public abstract class AbstractWordNet {
    * 
    * Used by HSO algorithm.
    * 
-   * @param synsetId
+   * @param synset
    * @return synsets of direct hypernym or empty collection if N/A
    */
-  public List<String> getDownwards(String synsetId) {
-    return getLinkedSynsets( synsetId,
+  public List<Synset> getDownwards(Synset synset) {
+    return getLinkedSynsets( synset,
             new Link[]{Link.hmem, Link.hsub, Link.hprt,//holo 
             Link.hypo, Link.hasi, //hypos
             Link.caus, Link.enta, } );//etc
   }
   
-  public List<String> getHypes(String synsetId) {
-    return getLinkedSynsets( synsetId, 
+  public List<Synset> getHypes(Synset synset) {
+    return getLinkedSynsets( synset, 
             new Link[]{Link.hype, Link.inst} );
   }
-  public List<String> getHypos(String synsetId) {
-    return getLinkedSynsets( synsetId, 
+  public List<Synset> getHypos(Synset synset) {
+    return getLinkedSynsets( synset, 
             new Link[]{Link.hypo, Link.hasi} );
   }
-  public List<String> getAllMeronyms(String synsetId) {
-    return getLinkedSynsets( synsetId, 
+  public List<Synset> getAllMeronyms(Synset synset) {
+    return getLinkedSynsets( synset, 
             new Link[]{Link.mmem, Link.msub,Link.mprt} );
   }
-  public List<String> getAllHolonyms(String synsetId) {
-    return getLinkedSynsets( synsetId, 
+  public List<Synset> getAllHolonyms(Synset synset) {
+    return getLinkedSynsets( synset, 
             new Link[]{Link.hmem,Link.hsub,Link.hprt} );
   }
-  public List<String> getAllDomain(String synsetId) {
-    return getLinkedSynsets( synsetId, 
+  public List<Synset> getAllDomain(Synset synset) {
+    return getLinkedSynsets( synset, 
             new Link[]{Link.dmnc,Link.dmnu,Link.dmnr} );
   }
-  public List<String> getAllMemberOfDomain(String synsetId) {
-    return getLinkedSynsets( synsetId, 
+  public List<Synset> getAllMemberOfDomain(Synset synset) {
+    return getLinkedSynsets( synset, 
             new Link[]{Link.dmtc,Link.dmtu,Link.dmtr} );
   }
   
-  private List<String> getLinkedSynsets( String synsetId, Link[] links ) {
-    Set<String> retval = new LinkedHashSet<String>();
+  //FIXME: before abstract wn release
+  boolean lenient = true;
+  
+  protected List<Synset> getLinkedSynsets( Synset synset, Link[] links ) {
+    List<Synset> retval = new ArrayList<Synset>();
     for ( Link link : links ) {
-      retval.addAll( getLinkedSynsets( synsetId, link.toString() ) );
+      retval.addAll( getLinkedSynsets( synset, link ) );
+      if (lenient || synset.getWord()!=null) {
+        retval.addAll( getLinkedWords( synset.getSynsetId(), synset.getWord(), link ) );
+      }
     }
-    return new ArrayList<String>(retval);
+    Set<String> history = new HashSet<String>();
+    List<Synset> duplicated = new ArrayList<Synset>();
+    for ( Synset s : retval ) {
+      if (history.contains(s.getSynsetId())) {
+        duplicated.add(s);
+      } else {
+        history.add(s.getSynsetId());
+      }
+    }
+    retval.removeAll(duplicated);
+    return retval;
   }
-//  
-//  /**
-//   * Given a synset s and link l, first find synsets S
-//   * that are connected to s with a link relation l, then
-//   * return gloss (dictionary definition) for each members of S  
-//   * @param synsetId
-//   * @param linkString
-//   * @return glosses or empty collection if N/A
-//   */
-//  public List<String> getGloss(String synsetId, String linkString) {
-//    List<String> linkedSynsetIds = new ArrayList<String>();
-//    Link link = null;
-//    try {
-//      link = Link.valueOf(linkString);
-//      linkedSynsetIds = findLinkedSynsetIds(synsetId, link);
-//    } catch (IllegalArgumentException e) {
-//      // I know it's not a good use of catching
-//      // this is how normal gloss is obtained
-//      // note: use of try-catch slows down
-//      linkedSynsetIds.add(synsetId);
-//    }
-//    
-//    if (linkString.equals("syns")) {
-//      
-//    }
-//
-//    List<String> glosses = new ArrayList<String>(linkedSynsetIds.size());
-//    for (String linkedSynsetId : linkedSynsetIds) {
-//      String gloss = null;
-//      if (Link.syns.equals(link)) {
-//        // Special case when you want name assigned to the synset, not the gloss.
-//        gloss = getNameOfSynset(synsetId);
-//        if (gloss == null) {
-//          gloss = getNameOfSynset(linkedSynsetId);
-//        }
-//      } else { // This path is more common than above
-//        gloss = getGloss( linkedSynsetId );
-//      }
-//
-//      if (gloss == null ) continue; 
-//      
-//      //postprocess
-//      //gloss = gloss.replaceAll("[^a-zA-Z0-9]", " ");  
-//      gloss = gloss.replaceAll("[.;:,?!(){}\"`$%@<>]", " ");
-//      gloss = gloss.replaceAll("&", " and ");
-//      gloss = gloss.replaceAll("_", " ");
-//      gloss = gloss.replaceAll("[ ]+", " ");
-//      gloss = gloss.replaceAll("(?<!\\w)'", " ");
-//      gloss = gloss.replaceAll("'(?!\\w)", " ");
-//      gloss = gloss.replaceAll("--", " ");
-//      gloss = gloss.toLowerCase();
-//      
-//      glosses.add( gloss );
-//    }
-//    return glosses;
-//  }
-//
-//  private List<String> findLinkedSynsetIds(String synsetId, Link link)
-//          throws IllegalArgumentException {
-//    List<String> linkedSynsetIds = new ArrayList<String>();
-//    if (link.equals(Link.mero)) {
-//      linkedSynsetIds.addAll(getLinkedSynsets(synsetId, Link.mmem.toString()));
-//      linkedSynsetIds.addAll(getLinkedSynsets(synsetId, Link.msub.toString()));
-//      linkedSynsetIds.addAll(getLinkedSynsets(synsetId, Link.mprt.toString()));
-//    } else if (link.equals(Link.holo)) {
-//      linkedSynsetIds.addAll(getLinkedSynsets(synsetId, Link.hmem.toString()));
-//      linkedSynsetIds.addAll(getLinkedSynsets(synsetId, Link.hsub.toString()));
-//      linkedSynsetIds.addAll(getLinkedSynsets(synsetId, Link.hprt.toString()));
-//    } else if (link.equals(Link.syns)) {
-//      linkedSynsetIds.add(synsetId);
-//    } else {
-//      linkedSynsetIds.addAll(getLinkedSynsets(synsetId, link.toString()));
-//    }
-//    return linkedSynsetIds;
-//  }
   
   /**
    * Given a synset id, get human-readable synset label e.g. "jogging#n#1"
@@ -355,47 +286,4 @@ public abstract class AbstractWordNet {
    */
   public abstract Set<String> dumpWords();
 
-// public static List<Synset> wordToSynsets( String word, POS pos ) {
-//    List<Word> words = WordDAO.findWordsByLemmaAndPos(word, pos);
-//    List<Synset> results = new ArrayList<Synset>();
-//    for ( Word wordObj : words ) {
-//      int wordid = wordObj.getWordid();
-//      List<Sense> senses = SenseDAO.findSensesByWordid( wordid );
-//      for ( Sense sense : senses ) {
-//        Synset synset = new Synset( sense.getSynset(), null, null, null );
-//        results.add( synset );
-//      }
-//    }
-//    return results;
-//  }
-//
-//  public static List<Word> synsetToWords( String synset ) { 
-//    List<Word> words = new ArrayList<Word>();
-//    List<Sense> senses = SenseDAO.findSensesBySynset( synset );
-//    for ( Sense sense : senses ) {
-//      Word word = WordDAO.findWordByWordid( sense.getWordid() );
-//      words.add( word );
-//    }
-//    return words;
-//  }
-
-//  public static Set<String> findSynonyms( String word, POS pos, boolean translate ) {
-//    Set<String> results = new LinkedHashSet<String>();
-//    List<Synset> synsets = WordNetUtil.wordToSynsets( word, pos );
-//    Lang srcLang = findLang( word );
-//    Lang anotherLang = srcLang.equals(Lang.jpn)?Lang.eng:Lang.jpn;
-//    Lang targetLang = translate?anotherLang:srcLang;
-//    for ( Synset synset : synsets ) {
-//      List<Sense> moreSenses = SenseDAO.findSensesBySynsetAndLang(synset.getSynset(), targetLang);
-//      for ( Sense moreSense : moreSenses ) {
-//        Word synonym = WordDAO.findWordByWordid( moreSense.getWordid() );
-//        results.add( synonym.getLemma() );
-//      }
-//    }
-//    // remove the original if any
-//    results.remove( word );
-//    return results;
-//  }
-  
-    
 }

@@ -15,6 +15,11 @@
  */
 package edu.cmu.lti.abstract_wordnet;
 
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+
 /**
  * Enum class for supported lexical relationships.
  * Note that not all are supported in a specific version of WordNet
@@ -56,13 +61,33 @@ public enum Link {
 	dmtr(";r"), //In Domain --- Region 1345 / (Member of this domain - REGION)
 	ants("!"), //Antonyms 0
 	vgrp("$"), //Verb Group
-	//relation over words
   deri("+"), //Derivationally related form
   part("<"), //Participle of verb
-	defa("\\"), //Derived from adjective
+	//defa("\\"), //Derived from adjective: finer-grained pert used in jwi
 	pert("\\"), //Pertainym (adj pertains to nouns)
 	syns(null), //(words sharing) the same synset
 	;
+	
+	private static final Set<Link> wordLinks = 
+	        new LinkedHashSet<Link>(Arrays.asList(new Link[]{
+        	  also, 
+            dmnc, dmnu, dmnr, dmtc, dmtu, dmtr,
+            ants, vgrp, deri, part, pert }));
+	
+	private static final Set<Link> synsetLinks = 
+	        new LinkedHashSet<Link>(Arrays.asList(new Link[]{
+              also, 
+              hype, inst, hypo, hasi, mmem, msub, mprt, 
+              hmem, hsub, hprt, attr, sim, enta, caus,
+              dmnu, dmnr, dmnc, dmtu, dmtr, dmtc, vgrp }));
+	
+	public boolean isDefinedAmongWords() {
+	  return wordLinks.contains(this);
+	}
+	
+	public boolean isDefinedAmongSynsets(){
+	  return synsetLinks.contains(this);
+	}
 	
 	private String symbol;
 	Link( String symbol ) {
