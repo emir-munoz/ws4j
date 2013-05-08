@@ -4,7 +4,7 @@ package edu.cmu.lti.ram_wordnet;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -28,22 +28,22 @@ public class OnMemoryWordNet {
   public final String SEP1 = "\t";//key and value are separated with this character
   public final String SEP2 = ",";//inside key or value, multiple items are concatenated with this
   
-  private final static boolean BENCHMARK = true;
+  private final static boolean BENCHMARK = false;
 
-  private final static String F_W2S = "/wordnet/word-synsets.txt";
   private final static String F_S2S = "/wordnet/synset-link-synsets.txt";
   private final static String F_S2G = "/wordnet/synset-gloss.txt";
   private final static String F_S2W = "/wordnet/synset-words.txt";
+  private final static String F_W2S = "/wordnet/word-synsets.txt";
   private final static String F_W2W = "/wordnet/word-link-words.txt";
   
   //Dict are for saving memory space
   public BiMap<String,Integer> dictS;//synset id to integer index
   public BiMap<String,Integer> dictW;//(non-lc'ed) word to integer index
-  public POSAndSynsets[] word2synsets;
   public int[][] synset2words;
   public LinkedSynsets[] synset2synset;
   public int[] synset2name;
   public char[][] synset2gloss;
+  public POSAndSynsets[] word2synsets;
   public LinkedWords[] word2words;
   
   //00004475-n  being,deri,02614181-v,be  organism,deri,02986509-a,organismic,01679459-a,organic,01093142-a,organic
@@ -68,10 +68,11 @@ public class OnMemoryWordNet {
       }
       synset2synset = initSynset2Synset( F_S2S, dictS );
       if (BENCHMARK) System.out.println(m.measure()+ " bytes ... synset2synset");
+      int[] wordCount = new int[2];//size of lower-case entry and non-lc entry.
       {
         Map<Integer,String[]> synset2wordStrings = initSynset2Words( F_S2W, dictS );
         if (BENCHMARK) System.out.println(m.measure()+" bytes ... synset2wordStrings [temp]");
-        dictW = createDict(synset2wordStrings);
+        dictW = createDict(synset2wordStrings, wordCount);
         if (BENCHMARK) System.out.println(m.measure()+ " bytes ... dictW");
         synset2words = initSynset2Words(synset2wordStrings, dictW);
         if (BENCHMARK) System.out.println(m.measure()+" bytes ... synset2words");
@@ -79,7 +80,7 @@ public class OnMemoryWordNet {
         synset2wordStrings = null;
         m.currentTotal();
       }
-      word2synsets = initWord2Synsets( F_W2S, dictS, dictW );
+      word2synsets = initWord2Synsets( F_W2S, dictS, dictW, wordCount[0] );
       if (BENCHMARK) System.out.println(m.measure()+ " bytes ... word2synsets");
       word2words = initWord2Words( F_W2W, dictS, dictW );
       if (BENCHMARK) System.out.println(m.measure()+ " bytes ... word2words");      
@@ -87,28 +88,30 @@ public class OnMemoryWordNet {
       e.printStackTrace();
     }
     long t1 = System.currentTimeMillis();
-    System.out.println(m.currentTotal()+" bytes used now. Loading done in "+(t1-t0)+" msec.");
+    if (BENCHMARK) System.out.println(m.currentTotal()+" bytes used now. Loading done in "+(t1-t0)+" msec.");
   }
   
-  private BiMap<String,Integer> createDict( Map<Integer,String[]> map ) {
-    Set<String> uniq = new HashSet<String>();
+  private BiMap<String,Integer> createDict( Map<Integer,String[]> map, int[] count ) {
+    Set<String> lcUnique = new LinkedHashSet<String>();
+    Set<String> nonlcUnique = new LinkedHashSet<String>();
     for ( String[] words : map.values() ) {
       for ( String w : words ) {
         // Input is already in LC, but dict must have both entries
-//        if (LC_KEY) {
-//          uniq.add(w.toLowerCase());
-//        } else {
-          uniq.add(w);
-          String lc = w.toLowerCase();
-          if (!w.equals(lc)) {
-            uniq.add(lc);
-          }
-//        }
+        String lc = w.toLowerCase();
+        lcUnique.add(lc);
+        if (!lc.equals(w)) {//if w is non LC
+          nonlcUnique.add( w );
+        }
       }
     }
+    count[0] = lcUnique.size();
+    count[1] = nonlcUnique.size();
+    BiMap<String,Integer> retval = HashBiMap.create(lcUnique.size()+nonlcUnique.size());
     int i=0;
-    BiMap<String,Integer> retval = HashBiMap.create(uniq.size());
-    for ( String w : uniq ) {
+    for ( String w : lcUnique ) {
+      retval.put(w, i++);
+    }
+    for ( String w : nonlcUnique ) {
       retval.put(w, i++);
     }
     return retval;
@@ -123,11 +126,11 @@ public class OnMemoryWordNet {
     return dict;
   }
   
-  private POSAndSynsets[] initWord2Synsets( String path, 
-          BiMap<String,Integer> dictS, BiMap<String,Integer> dictW ) throws IOException {
+  private POSAndSynsets[] initWord2Synsets( String path, BiMap<String,Integer> dictS, 
+          BiMap<String,Integer> dictW, int lcCount ) throws IOException {
     List<String> lines = IOUtils.readLines(getClass().getResourceAsStream(path));
     //capacity is a larger estimate
-    POSAndSynsets[] retval = new POSAndSynsets[dictW.size()];
+    POSAndSynsets[] retval = new POSAndSynsets[lcCount];
     for ( String line : lines ) {
       String[] kvs = line.split(SEP1);
       if (kvs.length<=1) continue;
@@ -139,7 +142,7 @@ public class OnMemoryWordNet {
         if (LC_KEY) {
           System.err.println("word not in index: "+kvs[0]+" -> "+lcWord);
         } else {
-          wordIndex = dictW.get(lcWord.toLowerCase());
+          wordIndex = dictW.get(lcWord);
           if (wordIndex==null) {
             System.err.println("word not in index: "+kvs[0]+" -> "+lcWord);
           }
@@ -167,8 +170,8 @@ public class OnMemoryWordNet {
     return retval;
   }
   
-  private LinkedWords[] initWord2Words( String path, 
-          BiMap<String,Integer> dictS, BiMap<String,Integer> dictW ) throws IOException {
+  private LinkedWords[] initWord2Words( String path, BiMap<String,Integer> dictS, 
+          BiMap<String,Integer> dictW ) throws IOException {
     List<String> lines = IOUtils.readLines(getClass().getResourceAsStream(path));
     //capacity is a larger estimate
     LinkedWords[] retval = new LinkedWords[dictS.size()];

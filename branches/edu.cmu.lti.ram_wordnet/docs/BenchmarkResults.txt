@@ -1,0 +1,103 @@
+GAE warm-up request
+https://developers.google.com/appengine/docs/java/config/appconfig#Warmup_Requests
+
+Local datastore web-GUI manager
+http://localhost:8888/_ah/admin/
+
+Benchmark (MEMORY)
+16,599,736 bytes ... dictS
+25,059,728 bytes ... word2synsets (raw 5,109,251)
+17,198,312 bytes ... synset2synset (originally 38,105,824; raw 5,861,147)
+21,695,224 bytes ... synset2wordStrings [temp]
+10,344,336 bytes ... dictW
+ 7,835,952 bytes ... synset2words (sometimes 17,333,040; raw 3,618,578)
+ 4,813,728 bytes ... synset2name (raw 2,594,809)
+29,093,912 bytes ... synset2gloss (sometimes 31,961,864; raw 10,257,539)
+267,976,704 bytes used now. (sometimes 554,500,096)
+Loading done in 11597 msec.
+Calculation done in 1735 msec.
+
+13,768,456 -> 14,709,776 (synset2name experiment; HashMap to LinkedHashMap)
+28,786,432 -> 25,059,728 (word2synsets; List<Integer> -> Integer[])
+29,248,112 -> 25,115,984 (synset2synset; List<Integer> -> Integer[])
+25,115,984 -> 18,953,448 (synset2synset; Map<Integer,Integer[]> -> int[] * int[][])
+24,519,040 -> 21,695,224 (synset2words; List<String> -> String[])
+21,695,224 -> 7,835,952 + 10,344,336 (synset2words; String[] -> Integer[])
+13,768,456 -> 4,813,728 (synset2name; String -> Integer)
+
+--------------------
+Just by swtching order to load, it became like this.
+
+32,863,144 bytes ... synset2gloss [temp]
+7,640,880 bytes ... dictS
+4,813,744 bytes ... synset2gloss
+25,059,728 bytes ... word2synsets
+17,198,312 bytes ... synset2synset
+16,881,464 bytes ... synset2wordStrings [temp]
+10,344,336 bytes ... dictW
+7,835,952 bytes ... synset2words
+4,813,728 bytes ... synset2name
+
+Map<String,List<Integer>> word2synsets;
+
+-----------------------
+32,860,344 bytes ... synset2gloss [temp]
+7,666,552 bytes ... dictS
+470,672 bytes ... synset2gloss
+3,224 bytes ... dictL
+13,031,080 bytes ... synset2synset
+16,881,704 bytes ... synset2wordStrings [temp]
+10,344,672 bytes ... dictW
+3,492,880 bytes ... synset2words
+14,836,480 bytes ... word2synsets
+470,880 bytes ... synset2name
+342,228,992 bytes used now.
+
+-----------------------
+Changed file format, use no compact
+34,868,368 bytes ... synset2gloss [temp]
+7,640,976 bytes ... dictS
+20,397,304 bytes ... synset2gloss
+2,440 bytes ... dictL
+13,157,360 bytes ... synset2synset
+15,458,120 bytes ... synset2wordStrings [temp]
+10,313,928 bytes ... dictW
+3,492,912 bytes ... synset2words
+15,003,728 bytes ... word2synsets
+265,551,872 bytes used now. Loading done in 11765 msec.
+
+-----------------------
+34,868,368 bytes ... synset2gloss [temp]
+7,640,976 bytes ... dictS
+20,397,304 bytes ... synset2gloss
+4,581,352 bytes ... synset2synset
+24,036,968 bytes ... synset2wordStrings [temp]
+10,313,928 bytes ... dictW
+3,492,912 bytes ... synset2words
+3,405,960 bytes ... word2synsets
+9,519,312 bytes ... word2words
+402,849,792 bytes used now. Loading done in 12973 msec.
+
+-------------------------
+#Putting lc+nonLC into dictW
+34,868,368 bytes ... synset2gloss [temp]
+7,640,976 bytes ... dictS
+20,397,304 bytes ... synset2gloss
+4,583,512 bytes ... synset2synset
+23,690,120 bytes ... synset2wordStrings [temp]
+15,743,624 bytes ... dictW
+3,492,912 bytes ... synset2words
+3,847,512 bytes ... word2synsets
+9,519,312 bytes ... word2words
+410,255,360 bytes used now. Loading done in 11841 msec.
+
+#word2synset word size is size(LC+nonLC) -> size(LC)
+34,868,368 bytes ... synset2gloss [temp]
+7,640,976 bytes ... dictS
+20,397,488 bytes ... synset2gloss
+4,583,328 bytes ... synset2synset
+23,690,144 bytes ... synset2wordStrings [temp]
+15,743,600 bytes ... dictW
+3,492,912 bytes ... synset2words
+3,684,344 bytes ... word2synsets
+9,519,312 bytes ... word2words
