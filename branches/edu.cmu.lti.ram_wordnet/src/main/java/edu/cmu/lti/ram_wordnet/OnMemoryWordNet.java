@@ -2,7 +2,6 @@ package edu.cmu.lti.ram_wordnet;
 
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -33,19 +32,25 @@ public class OnMemoryWordNet {
 
   private final static String F_W2S = "/wordnet/word-synsets.txt";
   private final static String F_S2S = "/wordnet/synset-link-synsets.txt";
-  private final static String F_S2N = "/wordnet/synset-name.txt";
   private final static String F_S2G = "/wordnet/synset-gloss.txt";
   private final static String F_S2W = "/wordnet/synset-words.txt";
+  private final static String F_W2W = "/wordnet/word-link-words.txt";
   
   //Dict are for saving memory space
   public BiMap<String,Integer> dictS;//synset id to integer index
-  public BiMap<String,Integer> dictW;//word to integer index
-  public BiMap<String,Integer> dictL;//link names to integer index
+  public BiMap<String,Integer> dictW;//(non-lc'ed) word to integer index
   public POSAndSynsets[] word2synsets;
   public int[][] synset2words;
   public LinkedSynsets[] synset2synset;
   public int[] synset2name;
   public char[][] synset2gloss;
+  public LinkedWords[] word2words;
+  
+  //00004475-n  being,deri,02614181-v,be  organism,deri,02986509-a,organismic,01679459-a,organic,01093142-a,organic
+  
+  //force word entries to be lower case?
+  //must be true 
+  public final static boolean LC_KEY = true;
   
   public OnMemoryWordNet() {
     MemoryMonitor m = new MemoryMonitor();
@@ -58,11 +63,10 @@ public class OnMemoryWordNet {
         if (BENCHMARK) System.out.println(m.measure()+ " bytes ... dictS");
         synset2gloss  = initSynset2Gloss( synset2glossTemp, dictS );
         if (BENCHMARK) System.out.println(m.measure()+ " bytes ... synset2gloss");
+        synset2glossTemp = null;
         m.currentTotal();
       }
-      dictL = createDict(Arrays.asList(Link.values()));
-      if (BENCHMARK) System.out.println(m.measure()+ " bytes ... dictL");
-      synset2synset = initSynset2Synset( F_S2S, dictS, dictL );
+      synset2synset = initSynset2Synset( F_S2S, dictS );
       if (BENCHMARK) System.out.println(m.measure()+ " bytes ... synset2synset");
       {
         Map<Integer,String[]> synset2wordStrings = initSynset2Words( F_S2W, dictS );
@@ -72,12 +76,13 @@ public class OnMemoryWordNet {
         synset2words = initSynset2Words(synset2wordStrings, dictW);
         if (BENCHMARK) System.out.println(m.measure()+" bytes ... synset2words");
         synset2wordStrings.keySet().size();
+        synset2wordStrings = null;
         m.currentTotal();
       }
       word2synsets = initWord2Synsets( F_W2S, dictS, dictW );
       if (BENCHMARK) System.out.println(m.measure()+ " bytes ... word2synsets");
-      synset2name   = initSynset2Name( F_S2N, dictS, dictW );
-      if (BENCHMARK) System.out.println(m.measure()+ " bytes ... synset2name");
+      word2words = initWord2Words( F_W2W, dictS, dictW );
+      if (BENCHMARK) System.out.println(m.measure()+ " bytes ... word2words");      
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -87,7 +92,20 @@ public class OnMemoryWordNet {
   
   private BiMap<String,Integer> createDict( Map<Integer,String[]> map ) {
     Set<String> uniq = new HashSet<String>();
-    for ( String[] words : map.values() ) for ( String w : words ) uniq.add(w);
+    for ( String[] words : map.values() ) {
+      for ( String w : words ) {
+        // Input is already in LC, but dict must have both entries
+//        if (LC_KEY) {
+//          uniq.add(w.toLowerCase());
+//        } else {
+          uniq.add(w);
+          String lc = w.toLowerCase();
+          if (!w.equals(lc)) {
+            uniq.add(lc);
+          }
+//        }
+      }
+    }
     int i=0;
     BiMap<String,Integer> retval = HashBiMap.create(uniq.size());
     for ( String w : uniq ) {
@@ -105,148 +123,104 @@ public class OnMemoryWordNet {
     return dict;
   }
   
-//  private Map<Integer,List<String>> initSW() {
-//    Map<Integer,List<String>> synset2words = new HashMap<Integer,List<String>>();
-//    System.out.println(dict1.size());
-//    int c=0;
-//    for (Entry<String,Integer> e1 : dict1.entrySet()) {
-//      if(c++%1001==1000)System.out.println(c+"\n");
-//      List<String> wordLemmas = new ArrayList<String>();
-//      Integer argIndex = e1.getValue();
-//      for ( Entry<String,List<Integer>> e : word2synsets.entrySet() ) {
-//        if (e.getValue().contains(argIndex)) {
-//          String[] items = e.getKey().split(SEP1);
-//          wordLemmas.add(items[0]);
-//        }
-//      }
-//      synset2words.put(e1.getValue(), wordLemmas);
-//    }
-//    return synset2words;
-//  }
-  
-  //  typing_paper  n eng<>15082382-n
-//  private int[][] initWord2Synsets( String path, BiMap<String,Integer> dictS ) throws IOException {
-//    String text = IoUtil.readStream(getClass().getResourceAsStream(path));
-//    String[] lines = text.split("\n");
-//    int[][] retval = new int[ lines.length ][];
-//    for ( String line : lines ) {
-//      String[] items = line.split(SEP1);
-//      if (items.length!=2) continue; 
-//      String[] values = items[1].split(",");
-//      int[] indices = new Integer[values.length];
-////      for ( String v : values ) indices.add( dict1.get(v) );
-//      for (int i = 0; i < values.length; i++) {
-//        indices[i] = dictS.get(values[i]);
-//      }
-//      retval[items[0]] = indices;
-//    }
-//    return retval;
-//  }
-  
-
   private POSAndSynsets[] initWord2Synsets( String path, 
           BiMap<String,Integer> dictS, BiMap<String,Integer> dictW ) throws IOException {
     List<String> lines = IOUtils.readLines(getClass().getResourceAsStream(path));
     //capacity is a larger estimate
-    Map<Integer,Map<String,Integer[]>> result = new HashMap<Integer,Map<String,Integer[]>>( lines.size() * 4/3 + 1 );
-    for ( String line : lines ) {
-      String[] kv = line.split(SEP1);
-      if (kv.length!=2) continue; 
-      String[] keys = kv[0].split(SEP2);
-      String word = cannonicalize(keys[0]);
-      String pos = keys[1];
-      Integer wordIndex = dictW.get(word);
-      if (wordIndex==null) System.err.println("word not in index!!");
-      Map<String,Integer[]> pos2synsets = result.get(wordIndex);
-      if (pos2synsets == null) pos2synsets = new HashMap<String,Integer[]>();
-      String[] values = kv[1].split(SEP2);
-      Integer[] indices = new Integer[values.length];
-      for (int i = 0; i < values.length; i++) {
-        indices[i] = dictS.get(values[i]);
-      }
-      pos2synsets.put(pos, indices);
-      result.put(wordIndex, pos2synsets);
-    }
-    return compact(result);
-  }
-
-  private POSAndSynsets[] compact( Map<Integer,Map<String,Integer[]>> word2synset ) {
     POSAndSynsets[] retval = new POSAndSynsets[dictW.size()];
-    for ( Entry<Integer,Map<String,Integer[]>> e : word2synset.entrySet() ) {
-      int wordIndex = e.getKey();
-      Map<String,Integer[]> posSynsetMap = e.getValue();
-      POSAndSynsets posAndSynsets = new POSAndSynsets( posSynsetMap.size() );
-      int i=0;
-      for ( Entry<String,Integer[]> posSynsets : posSynsetMap.entrySet() ) {
-        posAndSynsets.getPos()[i] = POS.valueOf(posSynsets.getKey());
-        int[] ss = new int[posSynsets.getValue().length];
-        for (int j=0; j<posSynsets.getValue().length; j++) {
-          ss[j] = posSynsets.getValue()[j];
-        }
-        posAndSynsets.getSynsets()[i] = ss;
-        i++;
-      }
-      retval[wordIndex] = posAndSynsets;
-    }
-    return retval;
-  }
-  
-  //11443721-n  hypo<>11467018-n,11519450-n,11521145-n
-  private LinkedSynsets[] initSynset2Synset( String path, 
-          BiMap<String,Integer> dictS, BiMap<String,Integer> dictL ) throws IOException {
-    List<String> lines = IOUtils.readLines(getClass().getResourceAsStream(path));
-    Map<Integer,Map<Integer,Integer[]>> result = new HashMap<Integer,Map<Integer,Integer[]>>( lines.size() * 4/3 + 1);
     for ( String line : lines ) {
-      String[] items = line.split(SEP1);
-      if (items.length!=2) continue; 
-      String[] items1 = items[0].split(SEP2);
-      Integer key1 = dictS.get(items1[0]);//Synset id
-      Integer key2 = dictL.get(items1[1]);//Link type key
-      if (key2==null) System.err.println("Invalid link: "+key2);
-      String[] targetSynsets = items[1].split(",");
-      Integer[] values = new Integer[targetSynsets.length];
-      for ( int i=0; i<targetSynsets.length; i++ ) {
-        values[i] = dictS.get(targetSynsets[i]);
-      }
-      Map<Integer,Integer[]> v = result.get(key1);
-      if (v==null) v = new HashMap<Integer,Integer[]>(4 * 4/3 +1);
-      v.put(key2, values);
-      result.put(key1, v);
-    }
-    return compact(result, dictS);
-  }
-
-  private LinkedSynsets[] compact(Map<Integer,Map<Integer,Integer[]>> synset2synset,
-          BiMap<String,Integer> dictS) {
-    LinkedSynsets[] retval = new LinkedSynsets[ dictS.size() ];
-    for ( Entry<Integer,Map<Integer,Integer[]>> e : synset2synset.entrySet() ) {
-      Map<Integer,Integer[]> map = e.getValue();
-      LinkedSynsets ls = new LinkedSynsets(map.size());
-      int i = 0;
-      for (Entry<Integer,Integer[]> e2 : map.entrySet()) {
-        ls.getLinkIndex()[i] = e2.getKey();
-        ls.getSynsetIndices()[i] = new int[e2.getValue().length];
-        for (int j = 0; j < e2.getValue().length; j++) {
-          ls.getSynsetIndices()[i][j] = e2.getValue()[j];
+      String[] kvs = line.split(SEP1);
+      if (kvs.length<=1) continue;
+      String origWord = kvs[0];
+      String lcWord = origWord.toLowerCase();
+//      String lcWord = cannonicalize(origWord);
+      Integer wordIndex = dictW.get(lcWord);
+      if (wordIndex==null) {
+        if (LC_KEY) {
+          System.err.println("word not in index: "+kvs[0]+" -> "+lcWord);
+        } else {
+          wordIndex = dictW.get(lcWord.toLowerCase());
+          if (wordIndex==null) {
+            System.err.println("word not in index: "+kvs[0]+" -> "+lcWord);
+          }
         }
-        i++;
       }
-      retval[e.getKey()] = ls;
+      POSAndSynsets posAndSynsets = new POSAndSynsets(kvs.length-1);
+      for ( int i=1; i<kvs.length; i++ ) {
+        String[] items = kvs[i].split(SEP2);
+        int[] synsets = new int[items.length-1];
+        for ( int j=1; j<items.length; j++ ) {
+          synsets[j-1] = dictS.get(items[j]);
+        }
+//        posAndSynsets.getWord()[i-1] = dictW.get(origWord);
+        posAndSynsets.getPos()[i-1] = POS.valueOf(items[0]);
+        posAndSynsets.getSynsets()[i-1] = synsets;
+      }
+//      POSAndSynsets bu = retval[wordIndex];
+//      if (bu!=null) {
+//        bu.add(posAndSynsets);
+//        retval[wordIndex] = bu;
+//      } else {
+        retval[wordIndex] = posAndSynsets;
+//      }
     }
     return retval;
   }
   
-  private int[] initSynset2Name( String path, 
+  private LinkedWords[] initWord2Words( String path, 
           BiMap<String,Integer> dictS, BiMap<String,Integer> dictW ) throws IOException {
     List<String> lines = IOUtils.readLines(getClass().getResourceAsStream(path));
-    int[] retval = new int[ lines.size() ];
+    //capacity is a larger estimate
+    LinkedWords[] retval = new LinkedWords[dictS.size()];
+    for ( String line : lines ) {
+      String[] kvs = line.split(SEP1);
+      if (kvs.length<=1) continue;
+      int[] word = new int[kvs.length-1];
+      Link[] link = new Link[kvs.length-1];
+      int[][] synsets = new int[kvs.length-1][];
+      int[][] words = new int[kvs.length-1][];
+      for ( int i=1; i<kvs.length; i++ ) {
+        String[] items = kvs[i].split(SEP2);
+        word[i-1] = dictW.get(cannonicalize(items[0]));
+        link[i-1] = Link.valueOf(items[1]);
+        int n = (items.length-2)/2;
+        synsets[i-1] = new int[n];
+        words[i-1]   = new int[n];
+        for ( int j=0; j<n; j++ ) {
+          synsets[i-1][j] = dictS.get(items[2*j+2]);
+          words[i-1][j]   = dictW.get(cannonicalize(items[2*j+3]));
+        }
+//        LinkedWords linkedWords = new LinkedWords(wIndex, link, synsets, words);
+      }
+      String sidStr = kvs[0];
+      Integer sid = dictS.get(sidStr);
+      if (sid==null) System.err.println("word not in index!!");
+      LinkedWords linkedWords = new LinkedWords(word, link, synsets, words);
+      retval[sid] = linkedWords;
+    }
+    return retval;
+  }
+
+  //11443721-n  hypo<>11467018-n,11519450-n,11521145-n
+  private LinkedSynsets[] initSynset2Synset( String path, 
+          BiMap<String,Integer> dictS ) throws IOException {
+    List<String> lines = IOUtils.readLines(getClass().getResourceAsStream(path));
+    LinkedSynsets[] retval = new LinkedSynsets[dictS.size()];
     for ( String line : lines ) {
       String[] items = line.split(SEP1);
-      if (items.length!=2) continue; 
-      Integer sidIndex = dictS.get(items[0]);
-      Integer wordIndex = dictW.get(cannonicalize(items[1]));
-      if (wordIndex==null) System.err.println("OOD: "+items[1]);
-      retval[sidIndex] = wordIndex;
+      if (items.length<=1) continue;
+      LinkedSynsets ls = new LinkedSynsets(items.length-1);
+      for ( int i=1; i<items.length; i++ ) {
+        String[] items2 = items[i].split(SEP2);
+        int[] synsets = new int[items2.length-1];
+        for ( int j=1; j<items2.length; j++ ) {
+          synsets[j-1] = dictS.get(items2[j]);
+        }
+        ls.getSynsetIndices()[i-1] = synsets;
+        ls.getLinks()[i-1] = Link.valueOf(items2[0]);
+      }
+      Integer idx = dictS.get(items[0]);//Synset id
+      retval[idx] = ls;
     }
     return retval;
   }
@@ -269,9 +243,10 @@ public class OnMemoryWordNet {
       if (items.length!=2) continue; 
       Integer index = dictS.get(items[0]);
       String[] words = items[1].split(",");
-      for ( int i=0; i<words.length; i++ ) {
-        words[i] = cannonicalize(words[i]);
-      }
+//commented out 5/7
+//      for ( int i=0; i<words.length; i++ ) {
+//        words[i] = cannonicalize(words[i]);
+//      }
       result.put(index, words);
     }
     return result;
@@ -301,16 +276,18 @@ public class OnMemoryWordNet {
   }
   
   /**
-   * Rule 1: case insensitive
-   * Rule 2: hypes and underscores are recognized as same 
+   * Below are the cannonicalization rules
+   * Rule 1: hypes and underscores are recognized as same
+   * Rule 2: case insensitive matching by making the word lower-case
    * 
-   * @param s
-   * @return
+   * @param word
+   * @return cannonicalized word
    */
   public static String cannonicalize( String s ) {
-    return s != null ? s.replaceAll(" |-", "_").toLowerCase() : null;
+    s = s != null ? s.replaceAll(" ", "_") : null;
+    return LC_KEY ? s.toLowerCase() : s;
   }
- 
+
   public static void main(String[] args) {
     OnMemoryWordNet wn = new OnMemoryWordNet();
     int idx=0;

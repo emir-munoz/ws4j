@@ -1,5 +1,7 @@
 package edu.cmu.lti.ram_wordnet;
 
+import edu.cmu.lti.abstract_wordnet.Link;
+
 
 /**
  * Memory efficient implementation of Map<Integer,Integer[]>
@@ -8,19 +10,19 @@ package edu.cmu.lti.ram_wordnet;
  *
  */
 public class LinkedSynsets {
-  private int[] linkIndex;
+  private Link[] links;
   private int[][] synsetIndices;
   public LinkedSynsets(int size) {
-    linkIndex = new int[size];
+    links = new Link[size];
     synsetIndices = new int[size][];
   }
-  public int[] getLinkIndex() {
-    return linkIndex;
+  public Link[] getLinks() {
+    return links;
   }
   public int[][] getSynsetIndices() {
     return synsetIndices;
   }
   public int size() {
-    return linkIndex.length;
+    return links.length;
   }
 }
