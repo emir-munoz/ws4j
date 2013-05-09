@@ -2,7 +2,7 @@
 	<servlet>
 		<servlet-name>ws4j</servlet-name>
 		<servlet-class>edu.cmu.lti.ws4j.web.DemoServlet</servlet-class>
-		<load-on-startup>1</load-on-startup>
+		<!-- <load-on-startup>1</load-on-startup> -->
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>ws4j</servlet-name>
@@ -11,11 +11,19 @@
 	<servlet>
 		<servlet-name>suggest</servlet-name>
 		<servlet-class>edu.cmu.lti.ws4j.web.WordSuggestionServlet</servlet-class>
-		<load-on-startup>1</load-on-startup>
+		<!-- <load-on-startup>1</load-on-startup>  -->
 	</servlet>
 	<servlet-mapping>
 		<servlet-name>suggest</servlet-name>
 		<url-pattern>/suggest</url-pattern>
+	</servlet-mapping>
+	<servlet>
+		<servlet-name>wn</servlet-name>
+		<servlet-class>edu.cmu.lti.ws4j.web.WordNetServlet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>wn</servlet-name>
+		<url-pattern>/wn</url-pattern>
 	</servlet-mapping>
 	<!--
 	<servlet>

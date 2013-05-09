@@ -14,7 +14,10 @@ table.data { border:1px solid #666; border-collapse: collapse; border-spacing: 0
 #w1wrapper,#w2wrapper{}
 #w1,#w2{width:400px;padding:10px;font-size:14px}
 #s1,#s2{width:400px}
-
+.info{ display:none; }
+.green{ color:#009900; font-weight:bold; }
+.red{ color:#ff0000; font-weight:bold; }
+.synset:hover { text-decoration:underline }
 
   .ui-autocomplete {
     max-height: 300px;
