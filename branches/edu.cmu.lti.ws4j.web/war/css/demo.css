@@ -2,8 +2,10 @@ body,td {
   font-size: 12px;
   font-family: 'Hiragino Kaku Gothic Pro',Meiryo,sans-serif;
 }
+body { padding: 15px }
 h1 { font-weight: bold; font-size: 24px; margin-bottom: 0px; }
-h2 { font-weight: bold; font-size: 20px; border-bottom: 1px solid #000000; margin-top: 30px; }
+h2 { font-weight: bold; font-size: 20px; padding-left: 5px;padding-top: 2px;
+  border-bottom: 1px solid #cccccc; margin-top: 30px; background-color: #efefef }
 h3 { font-size: 14px; }
 .form td { background-color:#efefef; padding-left:10px; padding-right:10px }
 .form td.th { background-color:#cccccc; font-weight: bold; }
@@ -14,10 +16,20 @@ table.data { border:1px solid #666; border-collapse: collapse; border-spacing: 0
 #w1wrapper,#w2wrapper{}
 #w1,#w2{width:400px;padding:10px;font-size:14px}
 #s1,#s2{width:400px}
-.info{ display:none; }
+.info{  }
+.hr {border-top:1px dashed #999;margin-top:20px}
 .green{ color:#009900; font-weight:bold; }
 .red{ color:#ff0000; font-weight:bold; }
-.synset:hover { text-decoration:underline }
+.synset { color: #000099; }
+.synset:hover { cursor:help; color:#ffffff; background-color:#6666ff }
+.error_reason{ color: #999999; }
+.scrolltolink{ color: #000000; }
+#progress_container{ display: none; vertical-align:top; margin-bottom:8px; }
+
+/*
+  font-family: Monaco, Menlo, Consolas, "Courier New", monospace;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+*/
 
   .ui-autocomplete {
     max-height: 300px;

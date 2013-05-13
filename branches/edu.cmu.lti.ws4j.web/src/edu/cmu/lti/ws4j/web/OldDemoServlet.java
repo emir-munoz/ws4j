@@ -29,14 +29,14 @@ import edu.cmu.lti.ws4j.util.WS4JConfiguration;
 import edu.washington.cs.knowitall.morpha.MorphaStemmer;
 
 @SuppressWarnings("serial")
-public class DemoServlet extends HttpServlet {
+public class OldDemoServlet extends HttpServlet {
 
   private final static DecimalFormat df = new DecimalFormat("0.0000");
   
   public final static String sample1 = "Eventually, a huge cyclone hit the entrance of my house.";
   public final static String sample2 = "Finally, a massive hurricane attacked my home.";
 
-  private final static Pattern pSynsetLabel = Pattern.compile("\\b([^\\s*#]+#[nvar]#[0-9]{1,2})\\b");
+  private final static Pattern pSynsetLabel = Pattern.compile("\\b([^\\s#]+#[nvar]#[0-9]{1,2})\\b");
   
   private static final NumberFormat nf = NumberFormat.getNumberInstance();
   static {
@@ -46,8 +46,6 @@ public class DemoServlet extends HttpServlet {
   
   private Map<Measure,RelatednessCalculator> rcs = null;
 //  private KStemmer stemmer;
-  
-  private OpenNLPSingleton nlp = null;
   
   @Override
   public void doGet(HttpServletRequest req, HttpServletResponse res) 
@@ -111,6 +109,8 @@ public class DemoServlet extends HttpServlet {
     }
     w1 = w1.trim().replaceFirst("#+$", "");
     w2 = w2.trim().replaceFirst("#+$", "");
+//    WS4JConfiguration.getInstance().setTrace(true);//doesn't work here
+//    long t00 = System.currentTimeMillis();
     List<Measure> measures;
     if (measure!=null) {
       measures = new ArrayList<Measure>();
@@ -120,9 +120,9 @@ public class DemoServlet extends HttpServlet {
     }
     StringBuilder sbSummary = new StringBuilder("<h2>Summary</h2>\n");
     StringBuilder sbResult = new StringBuilder();
-    String comboInfo = null;
     for ( Measure m : measures ) {
       RelatednessCalculator rc = rcs.get(m);
+//      long t0 = System.currentTimeMillis();
       sbResult.append( "<h2 id=\""+m.toString().toLowerCase()+"\">"+m+"</h2>\n" );
       Relatedness r = null;
       r = rc.calcRelatednessOfWords(w1, w2, true, true);
@@ -167,42 +167,40 @@ public class DemoServlet extends HttpServlet {
       sbSummary.append("<h3><a class=\"scrolltolink\" href=\"javascript:scrollTo('"+id+"')\">"+id+"</a>"
               +"( "+input1+" , "+input2+" ) = "+score+"</h3>\n");
       sbResult.append(log);
+//        long t1 = System.currentTimeMillis();
+//        sbResult.append("<textarea rows=\"6\" cols=\"70\">");
       sbResult.append("<br><h3>Description of "+m+"</h3>\n"+m.getDescription().replaceAll("\n", "<br>\n")+"\n\n");
       sbResult.append("<br><h3>Parameters</h3>\n<ul>\n");
       Parameters param = rc.dumpParameters();
       for ( String key : param.keySet() ) sbResult.append( "<li>"+key+" = "+param.get(key)+"</li>\n" );  
       sbResult.append("</ul>");
-      if (comboInfo==null && r.getInput1SynsetNum() * r.getInput2SynsetNum()>1) {
-        comboInfo = "The highest scores given "+
-                r.getInput1SynsetNum()+" x "+r.getInput2SynsetNum()+" synset combinations are shown.";
-      }
     }
-    if (comboInfo!=null) sbSummary.append(comboInfo);
     out.println( sbSummary );
     out.println( sbResult );
     out.flush();
+    
+//    WS4JConfiguration.getInstance().setTrace(false);
+//    long t01 = System.currentTimeMillis();
   }
   
   public void runOnSentences( PrintWriter out, String s1, String s2 ) {
     if (s1==null || s2==null) {
       return;
     }
-    if (nlp==null) {
-      nlp = OpenNLPSingleton.INSTANCE;
-    }
+//    sbForm.append("[Tips] In this demo, the following preprocessing are done before WS4J: tokenization, POS tagging, lemmatization.<br>\n" +
+//        "If you see unexpected results due to errors in preprocessing, simply type in a list of lemmatized words.<br>\n");
+
+    String[] words1 = OpenNLPSingleton.INSTANCE.tokenize(s1);
+    String[] words2 = OpenNLPSingleton.INSTANCE.tokenize(s2);
+    String[] postag1 = OpenNLPSingleton.INSTANCE.postag(words1);
+    String[] postag2 = OpenNLPSingleton.INSTANCE.postag(words2);
     long t00 = System.currentTimeMillis();
-    String[] words1 = nlp.tokenize(s1);
-    String[] words2 = nlp.tokenize(s2);
-    String[] postag1 = nlp.postag(words1);
-    String[] postag2 = nlp.postag(words2);
-    long t01 = System.currentTimeMillis();
     for ( Measure m : rcs.keySet() ) {
-      int counter = 0;
       RelatednessCalculator rc = rcs.get(m);
-      String mLC = m.toString().toLowerCase();
+      long t0 = System.currentTimeMillis();
       StringBuilder sbResult = new StringBuilder();
       sbResult.append( "<h2>"+m+"</h2>\n" );
-      sbResult.append("<table border=1 class=\"data\" id=\""+mLC+"_table\"><tr><td class=\"th\">&nbsp;</td>");
+      sbResult.append("<table border=1 class=\"data\"><tr><td class=\"th\">&nbsp;</td>");
       for ( int i=0; i<words1.length; i++ ) {
         sbResult.append("<td class=\"th\">"+words1[i]+"<br><span class=\"g\">/"+postag1[i]+"</span></td>\n");
       }
@@ -217,36 +215,58 @@ public class DemoServlet extends HttpServlet {
           String pt1 = postag1[i];
           String w1 = MorphaStemmer.stemToken(words1[i].toLowerCase(), pt1);
           POS p1 = mapPOS( pt1 );
-          String popup = mLC+"( "+w1+"#"+(p1!=null?p1:"INVALID_POS")+" , "+w2+"#"+(p2!=null?p2:"INVALID_POS")+")";
+          boolean error = true;
+          String errorMsg = null;
+          double d = -1;
+          String popup = m+"('"+w1+"#"+(p1!=null?p1:"INVALID_POS")+"', '"+w2+"#"+(p2!=null?p2:"INVALID_POS")+"')";
+          if ( p1!=null && p2!=null ) {
+//              List<Synset> synsets1 = wn.getSynsets(w1, p1);
+//              List<Synset> synsets2 = wn.getSynsets(w2, p2);
+              Relatedness r = rc.calcRelatednessOfWords(w1+"#"+p1.toString(), w2+"#"+p2.toString(), true, false);
+              d = r.getScore();
+              error = r.getError().length()>0;
+              errorMsg = r.getError();
+              popup = m+"('"+(r.getSynset1()==null?w1+"#"+p1:r.getSynset1())+"', '"+(r.getSynset2()==null?w2+"#"+p2:r.getSynset2())+"')";
+          }
           String dText;
-          boolean acceptable = rc.getPOSPairs().isAcceptable(p1, p2);
-          if (acceptable) {
-            String pair = w1+"#"+p1+"::"+w2+"#"+p2;
-            dText = "<span class=\"num\" id=\""+mLC+(counter++)+"\" title=\""+pair+"\"><img src=\"images/ui-anim_basic_16x16.gif\"></span>";
+          String url = "ws4j?w1="+w1+"&w2="+w2+"&measure="+m+"&mode=w";
+          if ( d <= 0 ) {
+            if (error) {
+              dText = "<span class=\"g\" title=\""+popup+" = "+errorMsg+"\">-</span>";
+            } else {
+              dText = "<span class=\"g\" title=\""+popup+" = 0\"><a href=\""+url+"\" target=\"_blank\">0</a></span>";
+            }
           } else {
-            dText = "<span class=\"g\" title=\""+popup+" = -1 (Error: unsupported POS pair)\">-</span>";
+            if ( Double.MAX_VALUE - d < 10e-9 ) {//MAX
+              dText = "<span class=\"num\" title=\""+popup+" = INF\"><i><a href=\""+url+"\" target=\"_blank\">INF</a></i></span>";
+            } else {
+              dText = "<span class=\"num\" title=\""+popup+" = "+d+"\"><a href=\""+url+"\" target=\"_blank\">"+nf.format(d)+"</a></span>";
+            }
           }
           sbResult.append("<td>"+dText+"</td>\n");
         }
         sbResult.append("</tr>\n");
       }
       sbResult.append("</table><br>\n");
+      long t1 = System.currentTimeMillis();
+//        sbResult.append("<div title=\"tokenization, pos tagging, stemming, semantic similarity calculation, table generation\">\n</div>");
       sbResult.append("<textarea rows=\"6\" cols=\"70\">");
-      sbResult.append("[Description]\n"+m.getDescription()+"\n\n");
-      sbResult.append("[Parameters]\n");
+      sbResult.append("Done in "+(t1-t0)+" msec.\n\n");
+      sbResult.append(m+": "+m.getDescription()+"\n\n");
+      sbResult.append("Parameters:\n");
       Parameters p = rc.dumpParameters();
       for ( String key : p.keySet() ) sbResult.append( " - "+key+" = "+p.get(key)+"\n" );  
       sbResult.append("</textarea>");
       out.println( sbResult );
       out.flush();
     }
+    long t01 = System.currentTimeMillis();
     
-    out.println("<br><br><div class=\"hr\">&nbsp;</div>" +
-    		"<!--NLP preprocessing done in "+(t01-t00)+" msec.<br>\n-->" +
+    out.println("<br><br><div class=\"hr\">&nbsp;</div>All jobs done in "+(t01-t00)+" msec (including NLP preprocessing).<br>\n" +
     		"Google App Engine Performance Settings:<br>\n" +
-    		"<ul><li>Frontend Instance Class: F2 (1200Hz, 256MB)\n" +
-    		"<li>Max Idle Instances: 1\n" +
-    		"<li>Min Pending Latency: 15.0s </ul><br><br>\n");
+    		"Frontend Instance Class: F2 (1200Hz, 256MB)<br>\n" +
+    		"Max Idle Instances: 1<br>\n" +
+    		"Min Pending Latency: 15.0s <br><br><br>\n");
   }
   
 //  @Override
@@ -265,6 +285,7 @@ public class DemoServlet extends HttpServlet {
       for (Measure m : measures) {
         rcs.put(m, f.create(m));
       }
+      OpenNLPSingleton.INSTANCE.tokenize("");
     } catch (Exception e) {
       e.printStackTrace();
     }

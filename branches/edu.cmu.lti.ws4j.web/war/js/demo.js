@@ -7,6 +7,7 @@ function insert_sampleW() {
   $('#w_mode').click()
   $('#w1').val("dog#n#1");
   $('#w2').val("hunting_dog#n#1");
+  $('#w1,#w2').each(validateWithWN);
 }
 function validate() {
   var wMode = $('input[name=mode]:checked').val()=='w';
@@ -44,39 +45,118 @@ var delay = (function(){
 })();
 **/
 
+var defcache = {};
+
+function annotateDef() {
+  $('.synset').each(function(){
+    var o = $(this);
+    var ew = o.offset().left > ($(document).scrollLeft() + $(window).width() / 2) ? 'e' : 'w';
+    o.tipsy({
+      gravity: 's'+ew,
+      html: true,
+      opacity: 1,
+      title: function() {
+        var wps = o.text();
+        var title = defcache[wps];
+        if (typeof title === 'undefined') {
+          var request = $.ajax({ 
+		type: "GET", 
+		async: false,
+		url:"/wn", 
+		data: { mode:"def", q: wps }, 
+		dataType: "html" } );
+          request.done( function(msg) { 
+            title = msg;
+            defcache[wps] = title;
+	  }).fail(function(obj,err1,err2) {
+	    title = "ERROR: "+err2;
+	  });
+	}
+	return title;
+	}});
+  });
+}
+
+function validateWithWN() {
+  var w = $(this);
+  var request = $.ajax({ 
+    type: "GET", 
+    url:"/wn", 
+    data: { mode:"validate", q: w.val() }, 
+    dataType: "html" } );
+  request.done( function(msg) { 
+      var info = w.parent().find('.info');
+      info.html(msg);
+      //info.fadeIn("slow");
+      info.css({opacity: 0.0, visibility: "visible"}).animate({opacity: 1.0});
+  });
+}
+
+function scrollTo( id ) {
+  $("html, body").animate({ scrollTop: $('#'+id).offset().top }, 2000);
+}
+
 /** init **/
 $(document).ready(function () {
     //default: word
     var wMode = $('input[name=mode]:checked').val()=='w';
     $('.mode_label').text( wMode ? 'Word' : 'Sentence');
     
-    $('#w1,#w2').focusout(function() {
-	var w = $(this);
-	var request = $.ajax({ 
-	    type: "GET", 
-	    url:"/wn", 
-	    data: { q: w.val() }, 
-	    dataType: "html" } );
-	request.done( function(msg) { 
-	  var info = w.parent().find('.info');
-	  info.html(msg);
-	  info.fadeIn("slow");
-	});
-    }).focusin(function() {
-	$(this).parent().find('.info').fadeOut("slow");
+    //w1/w2 wn-validation settings
+    $('#w1,#w2').focusout( validateWithWN ).focusin(function() {
+	//$(this).parent().find('.info').fadeOut("slow");//losing the height
+	$(this).parent().find('.info').fadeTo(200,0);//not losing the height
+	//zips away
+	//$(this).parent().find('.info').css({opacity: 0.0, visibility: "hidden"}).animate({opacity: 1.0});
     });
-    
+});
 
-    //initialize dictionary
-    var jqxhr = $.ajax({ type: "GET", url:"/suggest", data: { term: "warm_up" } } );
-    //.done(function() { alert("loading "); })
-    //.fail(function() { alert("error"); })
-    //.always(function() { alert("complete"); });
+/** wordnet warmup (load wn in memory on serverside) **/
+$(document).ready(function () {
+  var loaded = false;
+  //initialize dictionary
+  var jqxhr = $.ajax({ type: "GET", url:"/suggest", data: { term: "warm_up" } } );
+  jqxhr.done(function() { 
+    p.css('width','100%');
+    p.parent().attr('class','progress progress-info');
+    loaded = true;
+  });
+  //.fail(function() { alert("error"); })
+  //.always(function() { alert("complete"); });
+  
+  setTimeout(function(){
+    if (!loaded) $('#progress_container').fadeIn('slow');
+  }, 500);
+  
+  var i=0;
+  var estimated_sec = 35;
+  var wait = 300;//msec
+  var p = $('#progress');
+  function progress() {
+    var per = i * 100 / (estimated_sec * 1000 / wait);
+    // Stop when progress bar 90% or above.
+    if ( loaded || per>=90 ) {
+      return;
+    }
+    p.css('width',per+'%');
+    i++;
+    setTimeout(progress, wait);
+  }
+  progress();
+  
+  annotateDef();
 });
 
 /** tipsy **/
 $(document).ready(function () {
-  $('#w1,#w2').tipsy({gravity: 'w'});
+  $('#w1,#w2').tipsy({gravity: 'w', opacity: 1});
+  $('.g').each(function(){//NG: .num 
+    var o = $(this);
+    //var title = o.attr('title');
+    //if (typeof title !== 'undefined') {
+      o.tipsy({gravity: 's', opacity: 1});
+    //}
+  });
 });
 
 /** jqueryui autocomplete **/
@@ -133,4 +213,56 @@ $(document).ready(function () {
   })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
   ga('create', 'UA-163510-12', 'ws4jdemo.appspot.com');
   ga('send', 'pageview');
+});
+
+/** Start WS4J async loading **/
+$(document).ready(function () {
+  function runWS(m, i, batchSize) {
+    var cells = $('#'+m+'_table .num');
+    var size = cells.length;
+    if (size==0) return;
+    var args = '';
+    for (var j=0; j<batchSize; j++) {
+      var pair = $(cells[i+j]).attr('title');
+      if (typeof pair === 'undefined') break;
+      args += args.length>0 ? ',' : '';
+      args += pair;
+    }
+    var request = $.ajax({ 
+      type: "GET", 
+      url:"/ws4j", 
+      data: { 'measure':m, 'args': args, 'batch_id': i }, 
+      dataType: "json" } );
+    request.done( function(data) {//async!! pay attention to the scope of var e.g. i, m
+      var batchId = data['batch_id']*1;
+      var measure = data['measure'];//m out of scope
+      var result = data['result'];
+      for ( var j=0; j<result.length; j++ ) {
+        var r = result[j];
+        var score = r['score'];
+        var w1 = r['input1'];
+        var w2 = r['input2'];
+        var o = $('#'+measure+(batchId+j));
+        var url = "?w1="+w1.replace(/#/g,'%23')+"&w2="+w2.replace(/#/g,'%23')+"&measure="+measure+"&mode=w";
+        o.html('<a href="'+url+'" target="_blank">'+score+'</a>');
+        o.attr('title',measure+'( '+w1+' , '+w2+' ) = '+score);
+        o.tipsy({gravity: 's', opacity: 1});
+      }
+      i += batchSize;
+      if (i < size) {
+        runWS(measure, i, batchSize);
+      }
+    });//end of done()
+    request.fail(function(msg,s1,s2) { alert("error: "+s2); })
+  }
+
+  /* starting point */
+  //measures and batch size (how many calcs to do per one API call).
+  var measures = {'wup':15, 'res':15, 'jcn':15, 
+      'lin':15, 'lch':15, 'path':15,
+      'lesk':4, 'hso':2};
+  for ( var m in measures ) {
+    var batchSize = measures[m];
+    runWS(m, 0, batchSize);
+  }
 });

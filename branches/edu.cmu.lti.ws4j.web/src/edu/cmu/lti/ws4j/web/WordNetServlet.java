@@ -24,23 +24,34 @@ public class WordNetServlet extends HttpServlet {
   @Override
   public void doGet(HttpServletRequest req, HttpServletResponse res) 
           throws IOException {
-    res.setContentType("application/json; charset=utf-8");
+    res.setContentType("text/plain; charset=utf-8");
+    String mode = req.getParameter("mode");
     String query = req.getParameter("q");
-    if (query==null || query.length()==0) {
+    if (mode==null || mode.length()==0 || query==null || query.length()==0) {
       res.getWriter().print("");
       return;
     }
-    try {
-      res.getWriter().print(wnValidation(query));
-    } catch (Exception e) {
-      res.getWriter().print("<i class=\"red\">Invalid input</i>: <b>"+query+"</b> not found in WordNet");
+    if ( mode.equals("validate") ) {
+      try {
+        res.getWriter().print(validation(query));
+      } catch (Exception e) {
+        //e.printStackTrace();
+        res.getWriter().print("<i class=\"red\">Invalid input</i>: <b>"+query+"</b> not found in WordNet");
+      }
+    } else if ( mode.equals("def") ) {
+      try {
+        res.getWriter().print(getDefinition(query));
+      } catch (Exception e) {
+        //e.printStackTrace();
+        res.getWriter().print("");
+      }
     }
     res.getWriter().flush();
   }
   
-  private String wnValidation(String q) throws Exception {
+  private String validation(String q) throws Exception {
     if (wn==null) lazyinit();
-    q = OnMemoryWordNet.cannonicalize(q).trim();
+    q = OnMemoryWordNet.cannonicalize(q.trim());
     if (q.endsWith("#")) {
       q = q.substring(0, q.length()-1);
     }
@@ -88,8 +99,28 @@ public class WordNetServlet extends HttpServlet {
       return "<i class=\"red\">Invalid input</i>:  <b>"+q+"</b> not found in WordNet.";
     }
   }
+
+  private String getDefinition(String q) throws Exception {
+    if (wn==null) lazyinit();
+    String[] items = q.trim().split("#");
+    String w = items[0];
+    Synset s = wn.getSynset(w, POS.valueOf(items[1]), Integer.parseInt(items[2]));
+    StringBuilder sb = new StringBuilder();
+    List<String> lemmas = wn.getWordLemmas(s.getSynsetId());
+    for ( String lemma : lemmas ) {
+      sb.append(sb.length()>0?", ":"");
+      sb.append(lemma.equalsIgnoreCase(w) ? "<b>"+lemma+"</b>":lemma);
+    }
+    String ge = wn.getGloss(s.getSynsetId());//gloss and example
+    int pos = ge.indexOf("\"");
+    if (pos>0) {
+      sb.append("<br>("+ge.substring(0,pos)+") <i>"+ge.substring(pos)+"</i>");
+    } else {
+      sb.append("<br>("+ge+")");
+    }
+    return "S: ("+s.getPos()+") "+sb.toString();
+  }
   
-//  @Override
   public void lazyinit() throws ServletException {
     long t0 = System.currentTimeMillis();
     try {

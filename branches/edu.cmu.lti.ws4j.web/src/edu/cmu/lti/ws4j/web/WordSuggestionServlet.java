@@ -49,7 +49,7 @@ public class WordSuggestionServlet extends HttpServlet {
   
   private String suggest(String q) throws Exception {
     if (wn==null) lazyinit();
-    q = OnMemoryWordNet.cannonicalize(q).trim();
+    q = OnMemoryWordNet.cannonicalize(q.trim());
     String[] split = q.split("#");
     if (split.length==1) {//when a word is typed
       if (q.endsWith("#")) {//word input complete, now suggest each sense with gloss
@@ -120,10 +120,11 @@ public class WordSuggestionServlet extends HttpServlet {
   
 
 //  @Override
+  // Warming up!
   public void lazyinit() throws ServletException {
     long t0 = System.currentTimeMillis();
     try {
-//      stemmer = new KStemmer();
+      OpenNLPSingleton.INSTANCE.toString();//warm up
       WS4JConfiguration.getInstance().setMFS(false);
       WS4JConfiguration.getInstance().setLeskNormalize(false);
       WS4JConfiguration.getInstance().setCache(true);

@@ -1,18 +1,25 @@
 <?xml version="1.0" encoding="utf-8" standalone="no"?><web-app xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.5" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
 	<servlet>
-		<servlet-name>ws4j</servlet-name>
+		<servlet-name>index</servlet-name>
 		<servlet-class>edu.cmu.lti.ws4j.web.DemoServlet</servlet-class>
 		<!-- <load-on-startup>1</load-on-startup> -->
 	</servlet>
 	<servlet-mapping>
-		<servlet-name>ws4j</servlet-name>
-		<url-pattern>/ws4j</url-pattern>
+		<servlet-name>index</servlet-name>
+		<url-pattern>/index</url-pattern>
 	</servlet-mapping>
 	<servlet>
-		<servlet-name>suggest</servlet-name>
-		<servlet-class>edu.cmu.lti.ws4j.web.WordSuggestionServlet</servlet-class>
-		<!-- <load-on-startup>1</load-on-startup>  -->
+		<servlet-name>ws4j</servlet-name>
+		<servlet-class>edu.cmu.lti.ws4j.web.WS4JServlet</servlet-class>
 	</servlet>
+    <servlet-mapping>
+        <servlet-name>ws4j</servlet-name>
+        <url-pattern>/ws4j</url-pattern>
+    </servlet-mapping>
+    <servlet>
+        <servlet-name>suggest</servlet-name>
+        <servlet-class>edu.cmu.lti.ws4j.web.WordSuggestionServlet</servlet-class>
+    </servlet>
 	<servlet-mapping>
 		<servlet-name>suggest</servlet-name>
 		<url-pattern>/suggest</url-pattern>
@@ -37,7 +44,7 @@
 	</servlet-mapping>
 	 -->
 	<welcome-file-list>
-		<welcome-file>ws4j</welcome-file>
+		<welcome-file>index</welcome-file>
 	</welcome-file-list>
  <servlet>
   <servlet-name>SystemServiceServlet</servlet-name>
