@@ -36,7 +36,9 @@ public class DemoServlet extends HttpServlet {
   public final static String sample1 = "Eventually, a huge cyclone hit the entrance of my house.";
   public final static String sample2 = "Finally, a massive hurricane attacked my home.";
 
-  private final static Pattern pSynsetLabel = Pattern.compile("\\b([^\\s*#]+#[nvar]#[0-9]{1,2})\\b");
+  private final static Pattern pSynsetLabel = WS4JServlet.pSynsetLabel;
+
+  private final static String loading = "<img src=\"images/ui-anim_basic_16x16.gif\">";
   
   private static final NumberFormat nf = NumberFormat.getNumberInstance();
   static {
@@ -109,6 +111,44 @@ public class DemoServlet extends HttpServlet {
     if (w1==null || w2==null) {
       return;
     }
+    w1 = w1.trim().replaceFirst("#+$", "");//.replaceAll(",", "")
+    w2 = w2.trim().replaceFirst("#+$", "");
+    List<Measure> measures;
+    if (measure!=null) {
+      measures = new ArrayList<Measure>();
+      measures.add(Measure.valueOf(measure.toUpperCase()));
+    } else {
+      measures = new ArrayList<Measure>(Measure.getAvailableMeasures());
+    }
+    StringBuilder sbSummary = new StringBuilder("<h2>Summary</h2>\n");
+    sbSummary.append("<input id=\"w1\" value=\""+w1+"\" type=\"hidden\">\n");
+    sbSummary.append("<input id=\"w2\" value=\""+w2+"\" type=\"hidden\">\n");
+    StringBuilder sbResult = new StringBuilder();
+    for ( Measure m : measures ) {
+      String id = m.toString().toLowerCase();
+      sbResult.append( "<h2 id=\""+id+"\">"+m+"</h2>\n" );
+      sbSummary.append("<h3><a class=\"scrolltolink\" href=\"javascript:scrollTo('"+id+"')\">"+id+"</a>");
+      sbSummary.append("<span id=\""+id+"_summary\">( "+w1+" , "+w2+" ) = "+loading+"</span></h3>\n");
+      sbResult.append("<div id=\""+id+"_trace\">"+loading+"</div>\n");
+      sbResult.append("<br><h3>Latency / Throughput</h3><div id=\""+id+"_time\">"+loading+"</div>\n");
+      sbResult.append("<br><h3>Description of "+m+"</h3>\n"+m.getDescription().replaceAll("\n", "<br>\n")+"\n\n");
+      sbResult.append("<br><h3>Parameters</h3>\n<ul>\n");
+      RelatednessCalculator rc = rcs.get(m);
+      Parameters param = rc.dumpParameters();
+      for ( String key : param.keySet() ) sbResult.append( "<li>"+key+" = "+param.get(key)+"</li>\n" );  
+      sbResult.append("</ul>");
+    }
+    sbSummary.append( "<div id=\"combo_info\"></div>\n" );
+    if (measures.size()>1) out.println( sbSummary );
+    out.println( sbResult );
+    out.flush();
+  }
+  
+  @Deprecated
+  public void runOnWordsOld( PrintWriter out, String w1, String w2, String measure ) {
+    if (w1==null || w2==null) {
+      return;
+    }
     w1 = w1.trim().replaceFirst("#+$", "");
     w2 = w2.trim().replaceFirst("#+$", "");
     List<Measure> measures;
@@ -177,7 +217,8 @@ public class DemoServlet extends HttpServlet {
                 r.getInput1SynsetNum()+" x "+r.getInput2SynsetNum()+" synset combinations are shown.";
       }
     }
-    if (comboInfo!=null) sbSummary.append(comboInfo);
+    if (comboInfo!=null) sbSummary.append("<div id=\"combo_info\"></div>");
+//    if (comboInfo!=null) sbSummary.append(comboInfo);
     out.println( sbSummary );
     out.println( sbResult );
     out.flush();
@@ -255,7 +296,7 @@ public class DemoServlet extends HttpServlet {
     try {
       WS4JConfiguration.getInstance().setMFS(false);
       WS4JConfiguration.getInstance().setLeskNormalize(false);
-      WS4JConfiguration.getInstance().setCache(true);
+      WS4JConfiguration.getInstance().setCache(false);//Cache is actually slow!!
       AbstractWordNet wn = WordNetFactory.getCachedInstanceForName(OnMemoryWordNetAPI.class.getCanonicalName());
       Factory f = new Factory(wn);
       Measure[] measures = {Measure.WUP, Measure.RES, Measure.JCN, 
@@ -303,7 +344,7 @@ public class DemoServlet extends HttpServlet {
     StringBuilder sb = new StringBuilder();
     sb.append( "<h1><a href=\"/\" style=\"text-decoration:none;color:#333333\">WS4J Demo</a></h1>\n" +
         "WS4J (WordNet Similarity for Java) measures semantic similarity/relatedness between words.<br><br>\n" );
-    sb.append("<div id=\"progress_container\">WordNet loading status <div style=\"width:220px; display:inline-block\">\n");  
+    sb.append("<div id=\"progress_container\"><span id=\"progress_container_label\" title=\"Requested the server to load WordNet on server-side memory.\">WordNet loading status: </span><div style=\"width:220px; display:inline-block\">\n");  
     sb.append("<div class=\"progress progress-info progress-striped active\" style=\"margin-top: 4px;margin-bottom: 0px;\">\n");  
     sb.append("<div id=\"progress\" class=\"bar\"></div>\n");
     sb.append("</div>\n</div>\n</div>\n");  

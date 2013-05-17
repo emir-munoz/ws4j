@@ -47,8 +47,8 @@ var delay = (function(){
 
 var defcache = {};
 
-function annotateDef() {
-  $('.synset').each(function(){
+function annotateDef(synsets) {
+  synsets.each(function(){
     var o = $(this);
     var ew = o.offset().left > ($(document).scrollLeft() + $(window).width() / 2) ? 'e' : 'w';
     o.tipsy({
@@ -64,16 +64,17 @@ function annotateDef() {
 		async: false,
 		url:"/wn", 
 		data: { mode:"def", q: wps }, 
-		dataType: "html" } );
+		dataType: "html",
+		timeout: 3000} );
           request.done( function(msg) { 
             title = msg;
             defcache[wps] = title;
 	  }).fail(function(obj,err1,err2) {
-	    title = "ERROR: "+err2;
+	    title = err2;
 	  });
 	}
-	return title;
-	}});
+      return title;
+    }});
   });
 }
 
@@ -93,7 +94,7 @@ function validateWithWN() {
 }
 
 function scrollTo( id ) {
-  $("html, body").animate({ scrollTop: $('#'+id).offset().top }, 2000);
+  $("html, body").animate({ scrollTop: $('#'+id).offset().top }, 1000);
 }
 
 /** init **/
@@ -111,11 +112,19 @@ $(document).ready(function () {
     });
 });
 
-/** wordnet warmup (load wn in memory on serverside) **/
-$(document).ready(function () {
+/** 
+  WordNet warm-up 
+  Loads WordNet on server-side memory asynchronously.
+  Periodically resend warm-up request so that GAE instance doesn't get killed.
+**/
+function warmup() {
   var loaded = false;
   //initialize dictionary
-  var jqxhr = $.ajax({ type: "GET", url:"/suggest", data: { term: "warm_up" } } );
+  var p = $('#progress');
+  var jqxhr = $.ajax({ 
+    type: "GET", 
+    url:"/suggest", 
+    data: { term: "warm_up" } } );
   jqxhr.done(function() { 
     p.css('width','100%');
     p.parent().attr('class','progress progress-info');
@@ -125,38 +134,35 @@ $(document).ready(function () {
   //.always(function() { alert("complete"); });
   
   setTimeout(function(){
-    if (!loaded) $('#progress_container').fadeIn('slow');
-  }, 500);
-  
-  var i=0;
-  var estimated_sec = 35;
-  var wait = 300;//msec
-  var p = $('#progress');
-  function progress() {
-    var per = i * 100 / (estimated_sec * 1000 / wait);
-    // Stop when progress bar 90% or above.
-    if ( loaded || per>=90 ) {
-      return;
+    if (loaded) return;
+    var i=0;
+    var estimated_sec = 35;
+    var wait = 600;//msec
+    function progress() {
+      var per = i * 100 / (estimated_sec * 1000 / wait);
+      // Stop when progress bar 90% or above.
+      if ( loaded || per>=90 ) {
+        return;
+      }
+      p.css('width',per+'%');
+      i++;
+      setTimeout(progress, wait);
     }
-    p.css('width',per+'%');
-    i++;
-    setTimeout(progress, wait);
-  }
-  progress();
-  
-  annotateDef();
+    progress();
+    $('#progress_container').fadeIn('slow');
+  }, 500);
+}
+
+$(document).ready(function(){
+  warmup();
+  var intervalID = setInterval(warmup, 300*1000);//sec
 });
 
 /** tipsy **/
 $(document).ready(function () {
   $('#w1,#w2').tipsy({gravity: 'w', opacity: 1});
-  $('.g').each(function(){//NG: .num 
-    var o = $(this);
-    //var title = o.attr('title');
-    //if (typeof title !== 'undefined') {
-      o.tipsy({gravity: 's', opacity: 1});
-    //}
-  });
+  $('#progress_container_label').tipsy({gravity: 'sw', opacity: 1});
+  $('.g').tipsy({gravity: 's', opacity: 1});
 });
 
 /** jqueryui autocomplete **/
@@ -217,8 +223,8 @@ $(document).ready(function () {
 
 /** Start WS4J async loading **/
 $(document).ready(function () {
-  function runWS(m, i, batchSize) {
-    var cells = $('#'+m+'_table .num');
+  function runSentence(measure, i, batchSize) {
+    var cells = $('#'+measure+'_table .num');
     var size = cells.length;
     if (size==0) return;
     var args = '';
@@ -231,8 +237,12 @@ $(document).ready(function () {
     var request = $.ajax({ 
       type: "GET", 
       url:"/ws4j", 
-      data: { 'measure':m, 'args': args, 'batch_id': i }, 
-      dataType: "json" } );
+      data: { 
+        'measure':measure, 
+        'args': args, 
+        'batch_id': i }, 
+      dataType: "json",
+      timeout: 60000} );
     request.done( function(data) {//async!! pay attention to the scope of var e.g. i, m
       var batchId = data['batch_id']*1;
       var measure = data['measure'];//m out of scope
@@ -250,10 +260,68 @@ $(document).ready(function () {
       }
       i += batchSize;
       if (i < size) {
-        runWS(measure, i, batchSize);
+        runSentence(measure, i, batchSize);
       }
     });//end of done()
-    request.fail(function(msg,s1,s2) { alert("error: "+s2); })
+    request.fail(function(msg,s1,s2) { console.log("error: "+s2); });
+  }
+  
+  function runWord(measure) {
+    var w1 = $('#w1').val();
+    var w2 = $('#w2').val();
+    if (w1.length==0 || w2.length==0) return;
+    w1 = w1.replace(/,/g,'');
+    w2 = w2.replace(/,/g,'');
+    var args = w1+'::'+w2;
+    var request = $.ajax({ 
+          type: "GET", 
+          url:"/ws4j", 
+          data: { 'measure':measure, 'args': args, 'trace': 1 }, 
+          dataType: "json",
+          timeout: 60000} );
+    request.done(function(data){
+      var m = data['measure'];
+      var result = data['result'];
+      var msec = ' msec.';
+      for ( var j=0; j<result.length; j++ ) {
+        var r = result[j];
+        var score = r['score'];
+        var s1 = r['input1'];
+        var s2 = r['input2'];
+        var trace = r['trace'];
+        var time = r['time'];
+        var error = r['error'];
+        var n1 = r['input1_num'];
+        var n2 = r['input2_num'];
+        var timeMsg = time.toFixed(1)+" msec";
+        if (n1*n2>1) timeMsg += " ("+n1+" x "+n2+" pairs of synsets).<br>"+(time/(n1*n2)).toFixed(1)+" msec/pair.";
+        timeMsg += "<br>"+(n1*n2*1000/time).toFixed(1)+" pairs/sec";
+        if (score<0) {//error
+          score = "-1 <span class=\"error_reason\">["+error+"]</span>";
+        } else {//no error
+          s1 = '<span class=\"synset\">'+s1+'</span>';
+          s2 = '<span class=\"synset\">'+s2+'</span>';
+        }
+        var combo = $('#combo_info');
+        if (combo.length>0 && combo.html().length==0 && n1*n2>1) combo.html("Each score above is the highest from "+
+            n1+" x "+n2+" pairs of synsets.");
+        var summary = $('#'+m+'_summary');
+        summary.html('( '+s1+' , '+s2+' ) = '+score+'\n');
+        annotateDef(summary.find('.synset'));
+        var sp = trace.split(msec);
+        var trace_summary = sp.length==1?trace:sp[0]+msec;
+        var trace_more = sp.slice(1).join(msec);
+        var traceHtml = sp.length<=2 ? trace_summary : (trace_summary+'<br><br><input type=\"button\" value=\" + more log \" onclick=\"more(\''+m+'\')\">'
+           +'<div id=\"'+m+'_more\" style=\"display:none\">'+trace_more+'</div>');
+        $('#'+m+'_trace').html(traceHtml);
+        $('#'+m+'_time').html(timeMsg);
+      }
+      annotateDef($('#'+m+'_trace .synset'));
+    });//end of done()
+    request.fail(function(msg,s1,s2) { 
+      $('#'+measure+'_trace,#'+measure+'_time').html(s2);
+      $('#'+measure+'_summary').html('( '+w1+' , '+w2+' ) = '+s2+'\n');
+    });
   }
 
   /* starting point */
@@ -261,8 +329,20 @@ $(document).ready(function () {
   var measures = {'wup':15, 'res':15, 'jcn':15, 
       'lin':15, 'lch':15, 'path':15,
       'lesk':4, 'hso':2};
-  for ( var m in measures ) {
-    var batchSize = measures[m];
-    runWS(m, 0, batchSize);
+  for ( var measure in measures ) {
+    var batchSize = measures[measure];
+    runSentence(measure, 0, batchSize);
+    runWord(measure);
   }
 });
+
+function more(m) {
+  var more = $('#'+m+'_more');
+  if (more.css('display')=='none') {
+    $('#'+m+'_trace input').val(' - less log ');
+    more.slideDown('slow');
+  } else {
+    $('#'+m+'_trace input').val(' + more log ');
+    more.slideUp('slow');
+  }
+}

@@ -11,7 +11,7 @@ h3 { font-size: 14px; }
 .form td.th { background-color:#cccccc; font-weight: bold; }
 table.data { border:1px solid #666; border-collapse: collapse; border-spacing: 0px; }
 .data td { margin:0px; text-align:right; font-size:11px; border:1px solid #666; border-collapse: collapse; border-spacing: 0px; }
-.data td.th { padding-left:5px; padding-right:5px; font-size:10px; font-weight: bold; text-align:left; padding-left:2px; background-color:rgb(255, 255, 173) }
+.data td.th { padding-left:5px; padding-right:5px; font-size:10px; font-weight: bold; text-align:left; padding-left:2px; background-color:#efefef }
 .g { color:#666666; }
 #w1wrapper,#w2wrapper{}
 #w1,#w2{width:400px;padding:10px;font-size:14px}

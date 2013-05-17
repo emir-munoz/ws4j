@@ -35,7 +35,7 @@ public class WS4JServlet extends HttpServlet {
   private final static DecimalFormat df5 = new DecimalFormat("0.0000");
   private final static DecimalFormat df1 = new DecimalFormat("0.0");
   
-  private final static Pattern pSynsetLabel = Pattern.compile("\\b([^\\s#]+#[nvar]#[0-9]{1,2})\\b");
+  public final static Pattern pSynsetLabel = Pattern.compile("\\b([^\\s*#]+#[nvar]#[0-9]{1,2})\\b");
   
   private Map<Measure,RelatednessCalculator> rcs = null;
   
@@ -47,16 +47,19 @@ public class WS4JServlet extends HttpServlet {
     String measure = req.getParameter("measure");
     String args    = req.getParameter("args");
     String batchId = req.getParameter("batch_id");
+    String trace = req.getParameter("trace");
 
     if (args==null || measure==null ) return;
     String[] pairs = args.split(",");
     
-    boolean enableTrace = false;
+    boolean enableTrace = trace!=null 
+            && !trace.equalsIgnoreCase("false")
+            && !trace.equalsIgnoreCase("0");
     
     JSONObject retval = new JSONObject();
     JSONArray result = new JSONArray();
     try {
-      retval.put("batch_id", batchId);
+      if (batchId!=null) retval.put("batch_id", batchId);
       retval.put("measure", measure.toLowerCase());
       if (rcs==null) lazyinit(); 
       int size = pairs.length;
@@ -84,7 +87,7 @@ public class WS4JServlet extends HttpServlet {
     w1 = w1.trim().replaceFirst("#+$", "");
     w2 = w2.trim().replaceFirst("#+$", "");
     RelatednessCalculator rc = rcs.get(m);
-    long t0 = System.currentTimeMillis();
+    long t0 = System.nanoTime();
     Relatedness r = rc.calcRelatednessOfWords(w1, w2, true, enableTrace);
     String log = r.getTrace();//(r.getError().length()>0?r.getError()+"\n\n":"")+
     if (enableTrace) {
@@ -128,14 +131,19 @@ public class WS4JServlet extends HttpServlet {
         }
       }
     }
-    long t1 = System.currentTimeMillis();
+    long t1 = System.nanoTime();
+    int sn1 = r.getInput1SynsetNum();
+    int sn2 = r.getInput2SynsetNum();
     JSONObject json = new JSONObject();
     json.put("score", score);
     json.put("input1", input1);
     json.put("input2", input2);
+    json.put("input1_num", sn1);
+    json.put("input2_num", sn2);
     if (enableTrace) json.put("trace", log);
     if (r.getError().length()>0) json.put("error", r.getError());
-    json.put("time", (t1-t0)/1000D+" sec");
+    double time = (t1-t0)/1000000D;
+    json.put("time", time);//msec
     return json;
   }
   
