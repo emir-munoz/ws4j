@@ -25,8 +25,8 @@ import edu.cmu.lti.abstract_wordnet.POS;
  */
 public class OnMemoryWordNet {
 
-  public final String SEP1 = "\t";//key and value are separated with this character
-  public final String SEP2 = ",";//inside key or value, multiple items are concatenated with this
+  public final static String SEP1 = "\t";//key and value are separated with this character
+  public final static String SEP2 = ",";//inside key or value, multiple items are concatenated with this
   
   private final static boolean BENCHMARK = false;
 
@@ -39,9 +39,9 @@ public class OnMemoryWordNet {
   //Dict are for saving memory space
   public BiMap<String,Integer> dictS;//synset id to integer index
   public BiMap<String,Integer> dictW;//(non-lc'ed) word to integer index
+  //Not using collections to save memory.
   public int[][] synset2words;
   public LinkedSynsets[] synset2synset;
-  public int[] synset2name;
   public char[][] synset2gloss;
   public POSAndSynsets[] word2synsets;
   public LinkedWords[] word2words;
@@ -140,6 +140,7 @@ public class OnMemoryWordNet {
       Integer wordIndex = dictW.get(lcWord);
       if (wordIndex==null) {
         System.err.println("word not in index: "+kvs[0]+" -> "+lcWord);
+        System.exit(-1);
       }
       POSAndSynsets posAndSynsets = new POSAndSynsets(kvs.length-1);
       for ( int i=1; i<kvs.length; i++ ) {
@@ -190,7 +191,10 @@ public class OnMemoryWordNet {
       }
       String sidStr = kvs[0];
       Integer sid = dictS.get(sidStr);
-      if (sid==null) System.err.println("word not in index!!");
+      if (sid==null) {
+        System.err.println("word not found in index!!: There is a problem with this input:" + line);
+        System.exit(-1);
+      }
       LinkedWords linkedWords = new LinkedWords(word, link, synsets, words);
       retval[sid] = linkedWords;
     }
@@ -280,17 +284,11 @@ public class OnMemoryWordNet {
    * @return cannonicalized word
    */
   public static String cannonicalize( String s ) {
-    s = s != null ? s.replaceAll(" ", "_") : null;
-    return LC_KEY ? s.toLowerCase() : s;
+    if (s!=null) {
+      s = s.replaceAll(" ", "_");
+      s = (LC_KEY ? s.toLowerCase() : s);
+    }
+    return s;
   }
 
-  public static void main(String[] args) {
-    OnMemoryWordNet wn = new OnMemoryWordNet();
-    int idx=0;
-    System.out.println(wn.synset2words[idx]);
-    System.out.println(wn.synset2synset[idx]);
-    System.out.println(wn.synset2name[idx]);
-    System.out.println(wn.synset2gloss[idx]);
-  }
-  
 }

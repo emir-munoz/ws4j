@@ -27,3 +27,22 @@ public enum POS {
   n, // noun
   v; // verb
 }
+/* my %pos_map = ('noun'      => 'n',
+         'n'         => 'n',
+         '1'         => 'n',
+         ''          => 'n',
+         'verb'      => 'v',
+         'v'         => 'v',
+         '2'         => 'v',
+         'adjective' => 'a',
+         'adj'       => 'a',
+         'a'         => 'a',
+         # Adj satellite is essentially just an adjective
+         's'         => 'a',
+         '3'         => 'a',
+         '5'         => 'a', # adj satellite
+         'adverb'    => 'r',
+         'adv'       => 'r',
+         'r'         => 'r',
+         '4'         => 'r');
+*/
