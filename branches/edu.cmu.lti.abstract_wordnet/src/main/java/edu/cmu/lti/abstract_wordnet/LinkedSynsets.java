@@ -5,7 +5,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-
 public class LinkedSynsets extends LinkedHashMap<Link,List<Synset>> {
 
   private static final long serialVersionUID = 1L;
@@ -78,6 +77,7 @@ public class LinkedSynsets extends LinkedHashMap<Link,List<Synset>> {
     return getLinkedSynsetsAndWords( downLinks );
   }
   
+  //FIXME Change name?
   public List<Synset> getHypes() {
     return getLinkedSynsetsAndWords( hypeLinks );
   }

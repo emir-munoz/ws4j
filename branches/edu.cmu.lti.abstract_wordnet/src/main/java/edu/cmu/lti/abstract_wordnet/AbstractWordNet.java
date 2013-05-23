@@ -132,6 +132,7 @@ public abstract class AbstractWordNet {
     List<Link> synsetLinks = new ArrayList<Link>(s);
     List<Link> wordLinks = new ArrayList<Link>(s);
     for ( Link link : links ) {
+//      if (!link.isDefinedOnPOS(synset.getPos())) continue; //do it in batch to save time
       if (link.isDefinedAmongSynsets()) {
         synsetLinks.add( link );
       }
