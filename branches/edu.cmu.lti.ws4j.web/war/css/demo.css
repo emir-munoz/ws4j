@@ -1,0 +1,47 @@
+body,td {
+  font-size: 12px;
+  font-family: 'Hiragino Kaku Gothic Pro',Meiryo,sans-serif;
+}
+body { padding: 15px }
+h1 { font-weight: bold; font-size: 24px; margin-bottom: 0px; }
+h2 { font-weight: bold; font-size: 20px; padding-left: 5px;padding-top: 2px;
+  border-bottom: 1px solid #cccccc; margin-top: 30px; background-color: #efefef }
+h3 { font-size: 14px; }
+.form td { background-color:#efefef; padding-left:10px; padding-right:10px }
+.form td.th { background-color:#cccccc; font-weight: bold; }
+table.data { border:1px solid #666; border-collapse: collapse; border-spacing: 0px; }
+.data td { margin:0px; text-align:right; font-size:11px; border:1px solid #666; border-collapse: collapse; border-spacing: 0px; }
+.data td.th { padding-left:5px; padding-right:5px; font-size:10px; font-weight: bold; text-align:left; padding-left:2px; background-color:#efefef }
+.g { color:#666666; }
+#w1wrapper,#w2wrapper{}
+#w1,#w2{width:400px;height:40px;padding:10px;font-size:14px; line-height:26px;}
+#s1,#s2{width:400px}
+.hr {border-top:1px dashed #999;margin-top:20px}
+.green{ color:#009900; font-weight:bold; }
+.red{ color:#ff0000; font-weight:bold; }
+.synset { color: #000099; }
+.synset:hover { cursor:help; color:#ffffff; background-color:#6666ff }
+.error_reason{ color: #999999; }
+.scrolltolink{ color: #000000; }
+#progress_container{ display: none; vertical-align:top; margin-bottom:8px; }
+
+/*
+  font-family: Monaco, Menlo, Consolas, "Courier New", monospace;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+*/
+
+  .ui-autocomplete {
+    max-height: 300px;
+    overflow-y: auto;
+    /* prevent horizontal scrollbar */
+    overflow-x: hidden;
+  }
+  /* IE 6 doesn't support max-height
+   * we use height instead, but this forces the menu to always be this tall
+   */
+  * html .ui-autocomplete {
+    height: 300px;
+  }
+  .ui-autocomplete-loading {
+    background: white url('/images/ui-anim_basic_16x16.gif') right center no-repeat;
+  }
