@@ -141,6 +141,7 @@ public class DemoServlet extends HttpServlet {
     sbSummary.append( "<div id=\"combo_info\"></div>\n" );
     if (measures.size()>1) out.println( sbSummary );
     out.println( sbResult );
+    out.println(getGAEPerformance());
     out.flush();
   }
   
@@ -231,12 +232,12 @@ public class DemoServlet extends HttpServlet {
     if (nlp==null) {
       nlp = OpenNLPSingleton.INSTANCE;
     }
-    long t00 = System.currentTimeMillis();
+//    long t00 = System.currentTimeMillis();
     String[] words1 = nlp.tokenize(s1);
     String[] words2 = nlp.tokenize(s2);
     String[] postag1 = nlp.postag(words1);
     String[] postag2 = nlp.postag(words2);
-    long t01 = System.currentTimeMillis();
+//    long t01 = System.currentTimeMillis();
     for ( Measure m : rcs.keySet() ) {
       int counter = 0;
       RelatednessCalculator rc = rcs.get(m);
@@ -282,12 +283,16 @@ public class DemoServlet extends HttpServlet {
       out.flush();
     }
     
-    out.println("<br><br><div class=\"hr\">&nbsp;</div>" +
-    		"<!--NLP preprocessing done in "+(t01-t00)+" msec.<br>\n-->" +
-    		"Google App Engine Performance Settings:<br>\n" +
-    		"<ul><li>Frontend Instance Class: F2 (1200Hz, 256MB)\n" +
-    		"<li>Max Idle Instances: 1\n" +
-    		"<li>Min Pending Latency: 15.0s </ul><br><br>\n");
+    out.println(getGAEPerformance());
+  }
+  
+  private String getGAEPerformance() {
+    return "<br><br><div class=\"hr\">&nbsp;</div>" +
+//            "<!--NLP preprocessing done in "+(t01-t00)+" msec.<br>\n-->" +
+            "Google App Engine Performance Settings:<br>\n" +
+            "<ul><li>Frontend Instance Class: F2 (1200Hz, 256MB)\n" +
+            "<li>Max Idle Instances: 1\n" +
+            "<li>Min Pending Latency: 15.0s </ul><br><br>\n";
   }
   
 //  @Override
