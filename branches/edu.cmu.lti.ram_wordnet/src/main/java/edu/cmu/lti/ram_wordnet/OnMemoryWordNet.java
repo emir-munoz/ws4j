@@ -36,12 +36,15 @@ public class OnMemoryWordNet {
   private final static String F_W2S = "/wordnet/word-synsets.txt";
   private final static String F_W2W = "/wordnet/word-link-words.txt";
   
+  public final static boolean useArrayOrMap = true;
+  
   //Dict are for saving memory space
   public BiMap<String,Integer> dictS;//synset id to integer index
   public BiMap<String,Integer> dictW;//(non-lc'ed) word to integer index
   //Not using collections to save memory.
   public int[][] synset2words;
   public LinkedSynsets[] synset2synset;
+  public LinkedSynsetsMap[] synset2synsetMap;
   public char[][] synset2gloss;
   public POSAndSynsets[] word2synsets;
   public LinkedWords[] word2words;
@@ -66,7 +69,11 @@ public class OnMemoryWordNet {
         synset2glossTemp = null;
         m.currentTotal();
       }
-      synset2synset = initSynset2Synset( F_S2S, dictS );
+      if (useArrayOrMap) {
+        synset2synset = LinkedSynsets.initSynset2Synset( F_S2S, dictS );
+      } else {
+        synset2synsetMap = LinkedSynsetsMap.initSynset2SynsetMap( F_S2S, dictS );
+      }
       if (BENCHMARK) System.out.println(m.measure()+ " bytes ... synset2synset");
       int[] wordCount = new int[2];//size of lower-case entry and non-lc entry.
       {
@@ -201,30 +208,6 @@ public class OnMemoryWordNet {
     return retval;
   }
 
-  //11443721-n  hypo<>11467018-n,11519450-n,11521145-n
-  private LinkedSynsets[] initSynset2Synset( String path, 
-          BiMap<String,Integer> dictS ) throws IOException {
-    List<String> lines = IOUtils.readLines(getClass().getResourceAsStream(path));
-    LinkedSynsets[] retval = new LinkedSynsets[dictS.size()];
-    for ( String line : lines ) {
-      String[] items = line.split(SEP1);
-      if (items.length<=1) continue;
-      LinkedSynsets ls = new LinkedSynsets(items.length-1);
-      for ( int i=1; i<items.length; i++ ) {
-        String[] items2 = items[i].split(SEP2);
-        int[] synsets = new int[items2.length-1];
-        for ( int j=1; j<items2.length; j++ ) {
-          synsets[j-1] = dictS.get(items2[j]);
-        }
-        ls.getSynsetIndices()[i-1] = synsets;
-        ls.getLinks()[i-1] = Link.valueOf(items2[0]);
-      }
-      Integer idx = dictS.get(items[0]);//Synset id
-      retval[idx] = ls;
-    }
-    return retval;
-  }
-  
   private char[][] initSynset2Gloss( Map<String,String> synset2glossTemp, 
           BiMap<String,Integer> dictS ) throws IOException {
     char[][] result = new char[synset2glossTemp.size()][];

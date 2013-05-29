@@ -51,8 +51,8 @@ public class POSAndSynsets {
   @Override
   public String toString() {
     return "POSAndSynsets [" +
-//    		"word=" + Arrays.toString(word) + ", " +
-    				"pos=" + Arrays.toString(pos)
+//        "word=" + Arrays.toString(word) + ", " +
+            "pos=" + Arrays.toString(pos)
             + ", size()=" + size() + "]";
   }
   

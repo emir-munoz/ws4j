@@ -39,7 +39,7 @@ public class OnMemoryWordNetAPI extends AbstractWordNet {
 //          String csWord = wn.dictW.inverse().get(ps.getWord()[i]);//case sensitive
         for (Integer index : indices) {
           String strSynset = wn.dictS.inverse().get(index);
-          Synset s = new Synset(strSynset, lcWord, pos);
+          Synset s = new Synset(strSynset, word, pos);
           retval.add(s);
         }
         break;//once found, no need to look further
@@ -52,43 +52,14 @@ public class OnMemoryWordNetAPI extends AbstractWordNet {
   public String getGloss(String synsetId) {
     return String.valueOf(wn.synset2gloss[wn.dictS.get(synsetId)]);
   }
-
-//  @Override
-  @Deprecated
-  public Map<Link,List<Synset>> getLinkedSynsets(Synset synset) {
-    LinkedSynsets ls = wn.synset2synset[wn.dictS.get(synset.getSynsetId())];
-    if (ls==null) return new LinkedHashMap<Link,List<Synset>>();
-    Map<Link,List<Synset>> retval = new LinkedHashMap<Link,List<Synset>>(ls.size()*4/3+1);
-    for (int i = 0; i < ls.size(); i++) {
-      Link link = ls.getLinks()[i];
-      List<Synset> synsets = new ArrayList<Synset>(ls.getSynsetIndices()[i].length);
-      for (int sidIndex : ls.getSynsetIndices()[i]) {
-        synsets.add(new Synset(wn.dictS.inverse().get(sidIndex)));
-      }
-      retval.put(link, synsets);
-    }
-    return retval;
-  }
-
+  
   @Override
   public Map<Link,List<Synset>> getLinkedSynsets(Synset synset, List<Link> links) {
-    List<Link> remainingLinks = new ArrayList<Link>(links);
-    LinkedSynsets ls = wn.synset2synset[wn.dictS.get(synset.getSynsetId())];
-    if (ls==null) return new LinkedHashMap<Link,List<Synset>>();
-    int size = ls.size();
-    Map<Link,List<Synset>> retval = new LinkedHashMap<Link,List<Synset>>(size*4/3+1);
-    for (int i = 0; i < size; i++) {
-      if (remainingLinks.size()==0) break; 
-      Link link = ls.getLinks()[i];
-      boolean suc = remainingLinks.remove(link);
-      if (!suc) continue;
-      List<Synset> synsets = new ArrayList<Synset>(ls.getSynsetIndices()[i].length);
-      for (int sidIndex : ls.getSynsetIndices()[i]) {
-        synsets.add(new Synset(wn.dictS.inverse().get(sidIndex)));
-      }
-      retval.put(link, synsets);
+    if (OnMemoryWordNet.useArrayOrMap) { 
+      return LinkedSynsets.getLinkedSynsets(wn, synset, links);
+    } else {
+      return LinkedSynsetsMap.getLinkedSynsets(wn, synset, links);
     }
-    return retval;
   }
   
 //  @Override
@@ -164,10 +135,12 @@ public class OnMemoryWordNetAPI extends AbstractWordNet {
       for ( int j=0; j<size2; j++ ) {
         int sid = lw.getLinkedSynsets()[i][j];
         int wid = lw.getLinkedWords()[i][j];
+        String strSid = wn.dictS.inverse().get(sid);
+        POS pos = getPOS(strSid);
         Synset synset = new Synset( 
-                wn.dictS.inverse().get(sid),
+                strSid,
                 wn.dictW.inverse().get(wid),
-                null);
+                pos);
         synsets.add(synset);
       }
       retval.put( link, synsets );
