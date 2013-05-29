@@ -1,5 +1,5 @@
 /*
- * Copyright 2009-2013 Carnegie Mellon University
+ * Copyright 2013 Carnegie Mellon University
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
@@ -23,25 +23,31 @@ import java.util.Set;
 
 public abstract class AbstractWordNet {
 
-  protected final static String msgInvalidPOS   = "Invalid POS";
-  protected final static String msgInvalidSense = "Invalid Sense Number";
-  protected final static String msgInvalidWord  = "Word not found in WordNet";
+  protected final static String MSG_INVALID_POS   = "Invalid POS";
+  protected final static String MSG_INVALID_SENSE = "Invalid Sense Number";
+  protected final static String MSG_INVALID_WORD  = "Word not found in WordNet";
   
   /**
-   * Given word and pos, find the synsets associated with them.
+   * Given a <code>word lemma</code> and a {@link POS}, 
+   * find an ordered list of synsets associated with them.
+   * 
    * @param wordLemma
+   *   lemma of a word that exists in WordNet
    * @param pos
-   * @return synsets or empty collection if N/A
+   *   part-of-speech
+   * @return synsets sorted by frequency count in descending order, 
+   * or empty collection if N/A
    */
   public abstract List<Synset> getSynsets(String wordLemma, POS pos);
   
   /**
-   * Get word lemmas given synset.
+   * Find an ordered list of word lemma  
+   * given a <code>synsetId</code>.
    * 
    * The result should ideally be sorted by frequency (in descending order),
    * for tracing purpose. See getSynsetLabel().
    * 
-   * Used by HSO algorithm and for tracing purpose.
+   * For WS4J users: this is used by HSO and LESK algorithm for tracing purpose.
    * 
    * @see getSynsetLabel()
    * @param synsetId
@@ -86,6 +92,7 @@ public abstract class AbstractWordNet {
   public abstract String getGloss( String synsetId );
 
   /**
+   * 
    * (Optional method to implement)
    *  
    * Used for input completion/suggestion.
@@ -94,17 +101,17 @@ public abstract class AbstractWordNet {
    */
   public abstract Set<String> dumpWords();
 
-  /**
-   * Given word and pos, find the most frequent synset
-   * (in wordnet, it's the top item).
-   * @param word
-   * @param pos
-   * @return most frequent synset or null if N/A
-   */
-  public Synset getMostFrequentConcept(String wordLemma, POS pos) {
-    List<Synset> result = getSynsets(wordLemma, pos);
-    return result.size()>0 ? result.get(0) : null;
-  }
+//  /**
+//   * Given word and pos, find the most frequent synset
+//   * (in wordnet, it's the top item).
+//   * @param word
+//   * @param pos
+//   * @return most frequent synset or null if N/A
+//   */
+//  public Synset getMostFrequentConcept(String wordLemma, POS pos) {
+//    List<Synset> result = getSynsets(wordLemma, pos);
+//    return result.size()>0 ? result.get(0) : null;
+//  }
 
 //  private final static boolean lenient = true;
   
@@ -151,51 +158,9 @@ public abstract class AbstractWordNet {
     return retval;
   }
   
-//  protected List<Synset> getLinkedSynsetsAndWords( Synset synset, Link[] links ) {
-//    List<Synset> retval = new ArrayList<Synset>();
-//    List<Link> synsetLinks = new ArrayList<Link>(links.length);
-//    List<Link> wordLinks = new ArrayList<Link>(links.length);
-//    for ( Link link : links ) {
-//      if (link.isDefinedAmongSynsets()) {
-//        synsetLinks.add( link );
-//      } else if (link.isDefinedAmongWords()) {
-////      if (link.isDefinedAmongWords() && (lenient || synset.getWord()!=null)) {
-//        wordLinks.add( link );
-//      }
-//    }
-//    {
-//      Map<Link,List<Synset>> linked = getLinkedSynsets( synset );
-//      for ( Link link : synsetLinks ) {
-//        List<Synset> synsets = linked.get(link);
-//        if (synsets!=null) {
-//          retval.addAll(synsets);
-//        }
-//      }
-//    }
-//    {
-//      Map<Link,List<Synset>> linked = getLinkedWords( synset.getSynsetId(), synset.getWord() );
-//      for ( Link link : wordLinks ) {
-//        List<Synset> synsets = linked.get(link);
-//        if (synsets!=null) {
-//          retval.addAll(synsets);
-//        }
-//      }
-//    }
-//    Set<String> history = new HashSet<String>();
-//    List<Synset> duplicated = new ArrayList<Synset>();
-//    for ( Synset s : retval ) {
-//      if (history.contains(s.getSynsetId())) {
-//        duplicated.add(s);
-//      } else {
-//        history.add(s.getSynsetId());
-//      }
-//    }
-//    retval.removeAll(duplicated);
-//    return retval;
-//  }
-  
   /**
-   * Given a synset id, get human-readable synset label e.g. "jogging#n#1"
+   * Given a synset id (e.g. 00628390-n), 
+   * get human-readable synset label e.g. "jogging#n#1"
    * 
    * There can be N ways to represent such label given synset with N words.
    * This method uses the most frequent word out of N words, assuming that
@@ -261,8 +226,8 @@ public abstract class AbstractWordNet {
 
   public Synset getSynset( String wordLemma, POS pos, int senseId ) throws IllegalArgumentException {
     List<Synset> synsets = getSynsets(wordLemma, pos);
-    if ( synsets==null ) throw new IllegalArgumentException(msgInvalidWord);
-    if ( synsets.size() < senseId ) throw new IllegalArgumentException(msgInvalidSense);
+    if ( synsets==null ) throw new IllegalArgumentException(MSG_INVALID_WORD);
+    if ( synsets.size() < senseId ) throw new IllegalArgumentException(MSG_INVALID_SENSE);
     return synsets.get(senseId-1);
   }
 
@@ -275,7 +240,7 @@ public abstract class AbstractWordNet {
    */
   public List<Synset> getSynsetsFromWPS( String wps ) throws IllegalArgumentException {
     List<Synset> retval = new ArrayList<Synset>();
-    if (wps==null || wps.trim().length()==0) throw new IllegalArgumentException(msgInvalidWord);
+    if (wps==null || wps.trim().length()==0) throw new IllegalArgumentException(MSG_INVALID_WORD);
     try {
       String[] split = wps.split("#");
       if ( split.length==3 ) {
@@ -284,12 +249,12 @@ public abstract class AbstractWordNet {
         try {
           pos = POS.valueOf(split[1]);
         } catch (IllegalArgumentException e) {
-          throw new IllegalArgumentException(msgInvalidPOS);
+          throw new IllegalArgumentException(MSG_INVALID_POS);
         }
         int sense = Integer.parseInt(split[2]);
         List<Synset> synsets = getSynsets(lemma, pos);
-        if (synsets.size()==0) throw new IllegalArgumentException(msgInvalidWord);
-        if (synsets.size()<sense) throw new IllegalArgumentException(msgInvalidSense);
+        if (synsets.size()==0) throw new IllegalArgumentException(MSG_INVALID_WORD);
+        if (synsets.size()<sense) throw new IllegalArgumentException(MSG_INVALID_SENSE);
         retval.add(synsets.get(sense-1));
         return retval;
       } else if ( split.length==2 ) {
@@ -298,22 +263,22 @@ public abstract class AbstractWordNet {
         try {
           pos = POS.valueOf(split[1]);
         } catch (IllegalArgumentException e) {
-          throw new IllegalArgumentException(msgInvalidPOS);
+          throw new IllegalArgumentException(MSG_INVALID_POS);
         }
         retval = getSynsets(lemma, pos);
-        if (retval.size()==0) throw new IllegalArgumentException(msgInvalidWord);
+        if (retval.size()==0) throw new IllegalArgumentException(MSG_INVALID_WORD);
         return retval;
       } else if ( split.length==1 ) {
         for ( POS pos : POS.values() ) {
           retval.addAll(getSynsets(wps, pos));
         }
-        if (retval.size()==0) throw new IllegalArgumentException(msgInvalidWord);
+        if (retval.size()==0) throw new IllegalArgumentException(MSG_INVALID_WORD);
         return retval;
       }
     } catch ( NumberFormatException e ) {
-      throw new IllegalArgumentException(msgInvalidSense);
+      throw new IllegalArgumentException(MSG_INVALID_SENSE);
     } catch ( IndexOutOfBoundsException e ) {
-      throw new IllegalArgumentException(msgInvalidSense);
+      throw new IllegalArgumentException(MSG_INVALID_SENSE);
     }
     return retval;
   }
