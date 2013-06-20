@@ -10,7 +10,7 @@
 	<classpathentry kind="lib" path="war/WEB-INF/lib/morpha-stemmer-1.0.4.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/opennlp-maxent-3.0.2-incubating.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/opennlp-tools-1.5.2-incubating.jar"/>
-	<classpathentry kind="lib" path="war/WEB-INF/lib/ram_wordnet.jar"/>
 	<classpathentry kind="lib" path="war/WEB-INF/lib/ws4j.jar"/>
+	<classpathentry kind="lib" path="war/WEB-INF/lib/imw.jar"/>
 	<classpathentry kind="output" path="war/WEB-INF/classes"/>
 </classpath>

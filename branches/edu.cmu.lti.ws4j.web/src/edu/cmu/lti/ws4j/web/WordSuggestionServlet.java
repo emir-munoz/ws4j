@@ -14,8 +14,8 @@ import edu.cmu.lti.abstract_wordnet.AbstractWordNet;
 import edu.cmu.lti.abstract_wordnet.POS;
 import edu.cmu.lti.abstract_wordnet.Synset;
 import edu.cmu.lti.abstract_wordnet.WordNetFactory;
-import edu.cmu.lti.ram_wordnet.OnMemoryWordNet;
-import edu.cmu.lti.ram_wordnet.OnMemoryWordNetAPI;
+import edu.cmu.lti.ram_wordnet.InMemoryWordNet;
+import edu.cmu.lti.ram_wordnet.InMemoryWordNetAPI;
 import edu.cmu.lti.ws4j.util.WS4JConfiguration;
 
 @SuppressWarnings("serial")
@@ -49,7 +49,7 @@ public class WordSuggestionServlet extends HttpServlet {
   
   private String suggest(String q) throws Exception {
     if (wn==null) lazyinit();
-    q = OnMemoryWordNet.cannonicalize(q.trim());
+    q = InMemoryWordNet.cannonicalize(q.trim());
     String[] split = q.split("#");
     if (split.length==1) {//when a word is typed
       if (q.endsWith("#")) {//word input complete, now suggest each sense with gloss
@@ -129,7 +129,7 @@ public class WordSuggestionServlet extends HttpServlet {
       WS4JConfiguration.getInstance().setLeskNormalize(false);
       WS4JConfiguration.getInstance().setCache(true);
       //bug in caching?
-      wn = WordNetFactory.getCachedInstanceForName(OnMemoryWordNetAPI.class.getCanonicalName());
+      wn = WordNetFactory.getCachedInstanceForName(InMemoryWordNetAPI.class.getCanonicalName());
       words = new ArrayList<String>(wn.dumpWords());
       Collections.sort(words);
     } catch (Exception e) {

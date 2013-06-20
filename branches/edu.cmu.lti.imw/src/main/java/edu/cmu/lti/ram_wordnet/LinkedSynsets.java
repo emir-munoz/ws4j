@@ -43,11 +43,11 @@ public class LinkedSynsets {
     List<String> lines = IOUtils.readLines(LinkedSynsets.class.getResourceAsStream(path));
     LinkedSynsets[] retval = new LinkedSynsets[dictS.size()];
     for ( String line : lines ) {
-      String[] items = line.split(OnMemoryWordNet.SEP1);
+      String[] items = line.split(InMemoryWordNet.SEP1);
       if (items.length<=1) continue;
       LinkedSynsets ls = new LinkedSynsets(items.length-1);
       for ( int i=1; i<items.length; i++ ) {
-        String[] items2 = items[i].split(OnMemoryWordNet.SEP2);
+        String[] items2 = items[i].split(InMemoryWordNet.SEP2);
         int[] synsets = new int[items2.length-1];
         for ( int j=1; j<items2.length; j++ ) {
           synsets[j-1] = dictS.get(items2[j]);
@@ -61,7 +61,7 @@ public class LinkedSynsets {
     return retval;
   }
 
-  public static Map<Link, List<Synset>> getLinkedSynsets(OnMemoryWordNet wn, 
+  public static Map<Link, List<Synset>> getLinkedSynsets(InMemoryWordNet wn, 
           Synset synset, List<Link> links) {
     List<Link> remainingLinks = new ArrayList<Link>(links);
     LinkedSynsets ls = wn.synset2synset[wn.dictS.get(synset.getSynsetId())];
@@ -86,7 +86,7 @@ public class LinkedSynsets {
   }
   
   @Deprecated
-  public static Map<Link, List<Synset>> getLinkedSynsets(OnMemoryWordNet wn, 
+  public static Map<Link, List<Synset>> getLinkedSynsets(InMemoryWordNet wn, 
           Synset synset) {
     LinkedSynsets ls = wn.synset2synset[wn.dictS.get(synset.getSynsetId())];
     if (ls == null)

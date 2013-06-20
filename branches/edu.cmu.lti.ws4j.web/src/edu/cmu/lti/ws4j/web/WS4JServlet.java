@@ -17,7 +17,7 @@ import com.google.appengine.labs.repackaged.org.json.JSONObject;
 
 import edu.cmu.lti.abstract_wordnet.AbstractWordNet;
 import edu.cmu.lti.abstract_wordnet.WordNetFactory;
-import edu.cmu.lti.ram_wordnet.OnMemoryWordNetAPI;
+import edu.cmu.lti.ram_wordnet.InMemoryWordNetAPI;
 import edu.cmu.lti.ws4j.Factory;
 import edu.cmu.lti.ws4j.Relatedness;
 import edu.cmu.lti.ws4j.RelatednessCalculator;
@@ -154,7 +154,7 @@ public class WS4JServlet extends HttpServlet {
       WS4JConfiguration.getInstance().setMFS(false);
       WS4JConfiguration.getInstance().setLeskNormalize(false);
       WS4JConfiguration.getInstance().setCache(true);
-      AbstractWordNet wn = WordNetFactory.getCachedInstanceForName(OnMemoryWordNetAPI.class.getCanonicalName());
+      AbstractWordNet wn = WordNetFactory.getCachedInstanceForName(InMemoryWordNetAPI.class.getCanonicalName());
       Factory f = new Factory(wn);
       Measure[] measures = {Measure.WUP, Measure.RES, Measure.JCN, 
               Measure.LIN, Measure.LCH, Measure.PATH, Measure.LESK, 

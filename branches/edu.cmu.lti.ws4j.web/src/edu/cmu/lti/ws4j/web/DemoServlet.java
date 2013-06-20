@@ -19,7 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import edu.cmu.lti.abstract_wordnet.AbstractWordNet;
 import edu.cmu.lti.abstract_wordnet.POS;
 import edu.cmu.lti.abstract_wordnet.WordNetFactory;
-import edu.cmu.lti.ram_wordnet.OnMemoryWordNetAPI;
+import edu.cmu.lti.ram_wordnet.InMemoryWordNetAPI;
 import edu.cmu.lti.ws4j.Factory;
 import edu.cmu.lti.ws4j.Relatedness;
 import edu.cmu.lti.ws4j.RelatednessCalculator;
@@ -111,6 +111,7 @@ public class DemoServlet extends HttpServlet {
     if (w1==null || w2==null) {
       return;
     }
+    System.out.println("Request [w]: \""+w1+"\" & \""+w2+"\"");
     w1 = w1.trim().replaceFirst("#+$", "");//.replaceAll(",", "")
     w2 = w2.trim().replaceFirst("#+$", "");
     List<Measure> measures;
@@ -229,6 +230,7 @@ public class DemoServlet extends HttpServlet {
     if (s1==null || s2==null) {
       return;
     }
+    System.out.println("Request [s]: \""+s1+"\" & \""+s2+"\"");
     if (nlp==null) {
       nlp = OpenNLPSingleton.INSTANCE;
     }
@@ -302,7 +304,7 @@ public class DemoServlet extends HttpServlet {
       WS4JConfiguration.getInstance().setMFS(false);
       WS4JConfiguration.getInstance().setLeskNormalize(false);
       WS4JConfiguration.getInstance().setCache(false);//Cache is actually slow!!
-      AbstractWordNet wn = WordNetFactory.getCachedInstanceForName(OnMemoryWordNetAPI.class.getCanonicalName());
+      AbstractWordNet wn = WordNetFactory.getCachedInstanceForName(InMemoryWordNetAPI.class.getCanonicalName());
       Factory f = new Factory(wn);
       Measure[] measures = {Measure.WUP, Measure.RES, Measure.JCN, 
               Measure.LIN, Measure.LCH, Measure.PATH, Measure.LESK, 

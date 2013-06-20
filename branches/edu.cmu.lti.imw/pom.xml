@@ -2,10 +2,10 @@
      xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>edu.cmu.lti</groupId>
-  <artifactId>ram_wordnet</artifactId>
+  <artifactId>imw</artifactId>
   <packaging>jar</packaging>
   <version>1.0.0</version>
-  <name>RAM WordNet API</name>
+  <name>In-Memory WordNet API</name>
   <url>http://code.google.com/p/ws4j/</url>
 
   <organization>
@@ -34,7 +34,7 @@
   </dependencies>
 
   <build>
-    <finalName>ram_wordnet</finalName>
+    <finalName>imw</finalName>
     <sourceDirectory>src/main/java</sourceDirectory>
     <testSourceDirectory>src/test/java</testSourceDirectory>
 
@@ -69,7 +69,7 @@
             <archive>
               <manifest>
                 <addClasspath>true</addClasspath>
-                <mainClass>edu.cmu.lti.ram_wordnet.OnMemoryWordNetAPI</mainClass>
+                <mainClass>edu.cmu.lti.imw.InMemoryWordNetAPI</mainClass>
               </manifest>
             </archive>
           </configuration>
