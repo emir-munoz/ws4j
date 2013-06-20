@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,7 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 import edu.cmu.lti.abstract_wordnet.AbstractWordNet;
 import edu.cmu.lti.abstract_wordnet.POS;
 import edu.cmu.lti.abstract_wordnet.WordNetFactory;
-import edu.cmu.lti.ram_wordnet.InMemoryWordNetAPI;
+import edu.cmu.lti.imw.InMemoryWordNetAPI;
 import edu.cmu.lti.ws4j.Factory;
 import edu.cmu.lti.ws4j.Relatedness;
 import edu.cmu.lti.ws4j.RelatednessCalculator;
@@ -30,7 +31,9 @@ import edu.washington.cs.knowitall.morpha.MorphaStemmer;
 
 @SuppressWarnings("serial")
 public class DemoServlet extends HttpServlet {
-
+  
+  private final static Logger log = Logger.getLogger(DemoServlet.class.getName());
+  
   private final static DecimalFormat df = new DecimalFormat("0.0000");
   
   public final static String sample1 = "Eventually, a huge cyclone hit the entrance of my house.";
@@ -111,7 +114,7 @@ public class DemoServlet extends HttpServlet {
     if (w1==null || w2==null) {
       return;
     }
-    System.out.println("Request [w]: \""+w1+"\" & \""+w2+"\"");
+    log.info("Request [w]: \""+w1+"\" & \""+w2+"\"");
     w1 = w1.trim().replaceFirst("#+$", "");//.replaceAll(",", "")
     w2 = w2.trim().replaceFirst("#+$", "");
     List<Measure> measures;
@@ -230,7 +233,7 @@ public class DemoServlet extends HttpServlet {
     if (s1==null || s2==null) {
       return;
     }
-    System.out.println("Request [s]: \""+s1+"\" & \""+s2+"\"");
+    log.info("Request [s]: \""+s1+"\" & \""+s2+"\"");
     if (nlp==null) {
       nlp = OpenNLPSingleton.INSTANCE;
     }

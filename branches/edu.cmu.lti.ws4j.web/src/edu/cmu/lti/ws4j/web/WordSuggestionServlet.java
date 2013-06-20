@@ -14,8 +14,8 @@ import edu.cmu.lti.abstract_wordnet.AbstractWordNet;
 import edu.cmu.lti.abstract_wordnet.POS;
 import edu.cmu.lti.abstract_wordnet.Synset;
 import edu.cmu.lti.abstract_wordnet.WordNetFactory;
-import edu.cmu.lti.ram_wordnet.InMemoryWordNet;
-import edu.cmu.lti.ram_wordnet.InMemoryWordNetAPI;
+import edu.cmu.lti.imw.InMemoryWordNet;
+import edu.cmu.lti.imw.InMemoryWordNetAPI;
 import edu.cmu.lti.ws4j.util.WS4JConfiguration;
 
 @SuppressWarnings("serial")
