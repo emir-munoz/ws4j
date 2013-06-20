@@ -19,7 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import edu.cmu.lti.abstract_wordnet.AbstractWordNet;
 import edu.cmu.lti.abstract_wordnet.POS;
 import edu.cmu.lti.abstract_wordnet.WordNetFactory;
-import edu.cmu.lti.ram_wordnet.InMemoryWordNetAPI;
+import edu.cmu.lti.imw.InMemoryWordNetAPI;
 import edu.cmu.lti.ws4j.Factory;
 import edu.cmu.lti.ws4j.Relatedness;
 import edu.cmu.lti.ws4j.RelatednessCalculator;
