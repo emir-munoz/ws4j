@@ -12,8 +12,8 @@ import edu.cmu.lti.abstract_wordnet.AbstractWordNet;
 import edu.cmu.lti.abstract_wordnet.POS;
 import edu.cmu.lti.abstract_wordnet.Synset;
 import edu.cmu.lti.abstract_wordnet.WordNetFactory;
-import edu.cmu.lti.ram_wordnet.OnMemoryWordNet;
-import edu.cmu.lti.ram_wordnet.OnMemoryWordNetAPI;
+import edu.cmu.lti.ram_wordnet.InMemoryWordNet;
+import edu.cmu.lti.ram_wordnet.InMemoryWordNetAPI;
 import edu.cmu.lti.ws4j.util.WS4JConfiguration;
 import edu.washington.cs.knowitall.morpha.MorphaStemmer;
 
@@ -52,7 +52,7 @@ public class WordNetServlet extends HttpServlet {
   
   private String validation(String q) throws Exception {
     if (wn==null) lazyinit();
-    q = OnMemoryWordNet.cannonicalize(q.trim());
+    q = InMemoryWordNet.cannonicalize(q.trim());
     if (q.endsWith("#")) {
       q = q.substring(0, q.length()-1);
     }
@@ -144,7 +144,7 @@ public class WordNetServlet extends HttpServlet {
       WS4JConfiguration.getInstance().setMFS(false);
       WS4JConfiguration.getInstance().setLeskNormalize(false);
       WS4JConfiguration.getInstance().setCache(true);
-      wn = WordNetFactory.getCachedInstanceForName(OnMemoryWordNetAPI.class.getCanonicalName());
+      wn = WordNetFactory.getCachedInstanceForName(InMemoryWordNetAPI.class.getCanonicalName());
     } catch (Exception e) {
       e.printStackTrace();
     }

@@ -19,7 +19,7 @@ import javax.servlet.http.HttpServletResponse;
 import edu.cmu.lti.abstract_wordnet.AbstractWordNet;
 import edu.cmu.lti.abstract_wordnet.POS;
 import edu.cmu.lti.abstract_wordnet.WordNetFactory;
-import edu.cmu.lti.ram_wordnet.OnMemoryWordNetAPI;
+import edu.cmu.lti.ram_wordnet.InMemoryWordNetAPI;
 import edu.cmu.lti.ws4j.Factory;
 import edu.cmu.lti.ws4j.Relatedness;
 import edu.cmu.lti.ws4j.RelatednessCalculator;
@@ -263,10 +263,10 @@ public class OldDemoServlet extends HttpServlet {
     long t01 = System.currentTimeMillis();
     
     out.println("<br><br><div class=\"hr\">&nbsp;</div>All jobs done in "+(t01-t00)+" msec (including NLP preprocessing).<br>\n" +
-    		"Google App Engine Performance Settings:<br>\n" +
-    		"Frontend Instance Class: F2 (1200Hz, 256MB)<br>\n" +
-    		"Max Idle Instances: 1<br>\n" +
-    		"Min Pending Latency: 15.0s <br><br><br>\n");
+        "Google App Engine Performance Settings:<br>\n" +
+        "Frontend Instance Class: F2 (1200Hz, 256MB)<br>\n" +
+        "Max Idle Instances: 1<br>\n" +
+        "Min Pending Latency: 15.0s <br><br><br>\n");
   }
   
 //  @Override
@@ -276,7 +276,7 @@ public class OldDemoServlet extends HttpServlet {
       WS4JConfiguration.getInstance().setMFS(false);
       WS4JConfiguration.getInstance().setLeskNormalize(false);
       WS4JConfiguration.getInstance().setCache(true);
-      AbstractWordNet wn = WordNetFactory.getCachedInstanceForName(OnMemoryWordNetAPI.class.getCanonicalName());
+      AbstractWordNet wn = WordNetFactory.getCachedInstanceForName(InMemoryWordNetAPI.class.getCanonicalName());
       Factory f = new Factory(wn);
       Measure[] measures = {Measure.WUP, Measure.RES, Measure.JCN, 
               Measure.LIN, Measure.LCH, Measure.PATH, Measure.LESK, 
