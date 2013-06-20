@@ -32,11 +32,11 @@ public class LinkedSynsetsMap extends HashMap<Link,Integer[]> {
     List<String> lines = IOUtils.readLines(LinkedSynsetsMap.class.getResourceAsStream(path));
     LinkedSynsetsMap[] retval = new LinkedSynsetsMap[dictS.size()];
     for ( String line : lines ) {
-      String[] items = line.split(OnMemoryWordNet.SEP1);
+      String[] items = line.split(InMemoryWordNet.SEP1);
       if (items.length<=1) continue;
       LinkedSynsetsMap ls = new LinkedSynsetsMap(items.length-1);
       for ( int i=1; i<items.length; i++ ) {
-        String[] items2 = items[i].split(OnMemoryWordNet.SEP2);
+        String[] items2 = items[i].split(InMemoryWordNet.SEP2);
         Integer[] synsets = new Integer[items2.length-1];
         for ( int j=1; j<items2.length; j++ ) {
           synsets[j-1] = dictS.get(items2[j]);
@@ -49,7 +49,7 @@ public class LinkedSynsetsMap extends HashMap<Link,Integer[]> {
     return retval;
   }
   
-  public static Map<Link,List<Synset>> getLinkedSynsets(OnMemoryWordNet wn, 
+  public static Map<Link,List<Synset>> getLinkedSynsets(InMemoryWordNet wn, 
           Synset synset, List<Link> links) {
     LinkedSynsetsMap ls = wn.synset2synsetMap[wn.dictS.get(synset.getSynsetId())];
     if (ls==null) return new LinkedHashMap<Link,List<Synset>>();

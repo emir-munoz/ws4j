@@ -17,17 +17,17 @@ import edu.cmu.lti.abstract_wordnet.Synset;
  * @author Hideki Shima
  *
  */
-public class OnMemoryWordNetAPI extends AbstractWordNet {
+public class InMemoryWordNetAPI extends AbstractWordNet {
 
 //  private final static boolean FAST_MODE = true; // uses more memory but runs faster
   
-  private OnMemoryWordNet wn = new OnMemoryWordNet();
+  private InMemoryWordNet wn = new InMemoryWordNet();
   
   @Override
   public List<Synset> getSynsets(String word, POS pos) {
     List<Synset> retval = new ArrayList<Synset>();
     if (word==null || pos==null || word.length()==0 ) return retval;
-    String lcWord = OnMemoryWordNet.cannonicalize(word);
+    String lcWord = InMemoryWordNet.cannonicalize(word);
 //    String lc = word.toLowerCase();//duplicate
     Integer wordIndex = wn.dictW.get(lcWord);
     if (wordIndex==null) return retval;
@@ -55,7 +55,7 @@ public class OnMemoryWordNetAPI extends AbstractWordNet {
   
   @Override
   public Map<Link,List<Synset>> getLinkedSynsets(Synset synset, List<Link> links) {
-    if (OnMemoryWordNet.useArrayOrMap) { 
+    if (InMemoryWordNet.useArrayOrMap) { 
       return LinkedSynsets.getLinkedSynsets(wn, synset, links);
     } else {
       return LinkedSynsetsMap.getLinkedSynsets(wn, synset, links);
@@ -71,10 +71,10 @@ public class OnMemoryWordNetAPI extends AbstractWordNet {
     boolean lenientMode = word==null;
     Integer wordIndex = null;
     if (!lenientMode) {
-      word = OnMemoryWordNet.cannonicalize(word);
+      word = InMemoryWordNet.cannonicalize(word);
       wordIndex = wn.dictW.get(word);
       if (wordIndex==null) {
-        if (OnMemoryWordNet.LC_KEY) {
+        if (InMemoryWordNet.LC_KEY) {
           return retval;
         }
         wordIndex = wn.dictW.get(word.toLowerCase());
@@ -111,10 +111,10 @@ public class OnMemoryWordNetAPI extends AbstractWordNet {
     boolean lenientMode = word==null;
     Integer wordIndex = null;
     if (!lenientMode) {
-      word = OnMemoryWordNet.cannonicalize(word);
+      word = InMemoryWordNet.cannonicalize(word);
       wordIndex = wn.dictW.get(word);
       if (wordIndex==null) {
-        if (OnMemoryWordNet.LC_KEY) {
+        if (InMemoryWordNet.LC_KEY) {
           return retval;
         }
         wordIndex = wn.dictW.get(word.toLowerCase());
@@ -171,7 +171,7 @@ public class OnMemoryWordNetAPI extends AbstractWordNet {
   public static void main(String[] args) {
     long t0 = System.currentTimeMillis();
     try {
-      OnMemoryWordNetAPI wn = new OnMemoryWordNetAPI();
+      InMemoryWordNetAPI wn = new InMemoryWordNetAPI();
       {
         List<Synset> synsets = wn.getSynsets("earth", POS.n);
         for ( int i=0; i<synsets.size(); i++ ) {

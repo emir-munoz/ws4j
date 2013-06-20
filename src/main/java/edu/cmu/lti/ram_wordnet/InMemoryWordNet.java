@@ -23,7 +23,7 @@ import edu.cmu.lti.abstract_wordnet.POS;
  * @author Hideki Shima
  *
  */
-public class OnMemoryWordNet {
+public class InMemoryWordNet {
 
   public final static String SEP1 = "\t";//key and value are separated with this character
   public final static String SEP2 = ",";//inside key or value, multiple items are concatenated with this
@@ -55,7 +55,7 @@ public class OnMemoryWordNet {
   //must be true 
   public final static boolean LC_KEY = true;
   
-  public OnMemoryWordNet() {
+  public InMemoryWordNet() {
     MemoryMonitor m = new MemoryMonitor();
     long t0 = System.currentTimeMillis();
     try {
